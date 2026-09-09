@@ -1,8 +1,11 @@
 # Architecture
 
-A server-rendered Spring Boot MVC app. The browser gets HTML built by Thymeleaf; there is
-no JavaScript framework and no separate API for a front-end to consume (a couple of small
-JSON endpoints exist for the dashboard charts, nothing more).
+A server-rendered Spring Boot MVC app. The browser gets HTML built by Thymeleaf and there is
+no JavaScript framework. Two features reach past that and call JSON endpoints with `fetch`:
+the admin dashboard widgets hit `/api/dashboard/*` (court occupancy, member count) and the
+bulk-mail form posts to `/api/mail/*` (`MailRestController`, a `@RestController` with
+send-massive / send-to-category / send-to-user). That is the whole API surface — everything
+else is a form post that returns a rendered page.
 
 ## The layers
 
@@ -55,6 +58,9 @@ Worth knowing before reading the code, and the kind of thing a review would flag
   read uploaded avatars from an `uploads/` folder next to the working directory. That is
   local disk, not a network call, but it is state outside the database and it is
   gitignored.
+- The data-access interfaces are split across two packages for no real reason — `dao/`
+  (eight) and `repository/` (two). Both hold plain `JpaRepository` interfaces; the names
+  should have been one or the other.
 
 ## Persistence
 
