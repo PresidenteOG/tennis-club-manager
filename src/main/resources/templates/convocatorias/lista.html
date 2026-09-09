@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial Convocatorias - Almendral TC</title>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <script src="/vendor/tailwind.js"></script>
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    <style>
+        :root { --bg-grad-1: #1f2937; --bg-grad-2: #0f172a; --card-bg: #1e293b; --card-bg-hover: #0f172a; --border-color: #334155; --border-highlight: #475569; --text-main: #f1f5f9; --text-muted: #94a3b8; --btn-bg: #334155; --btn-hover: #475569; }
+        body { font-family: 'Montserrat', sans-serif; margin: 0; display: flex; background: radial-gradient(circle at center, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%); background-attachment: fixed; color: var(--text-main); min-height: 100vh; overflow-y: scroll; transition: background 0.5s ease; }
+        
+        .theme-card { background: var(--card-bg); border-color: var(--border-color); transition: all 0.3s ease; }
+        .theme-row { background: var(--card-bg-hover); border-color: transparent; transition: all 0.3s ease; }
+        .theme-text { color: var(--text-main); }
+        .theme-muted { color: var(--text-muted); }
+        .theme-border { border-color: var(--border-color); }
+        .theme-btn { background: var(--btn-bg); color: var(--text-main); border: none; outline: none;}
+        .theme-btn:hover { background: var(--btn-hover); }
+
+        body.admin-layout .main-content { margin-left: 280px; width: calc(100% - 280px); }
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        
+        .list-container { max-width: 1200px; width: 100%; border-radius: 40px; padding: 40px; border: 4px solid; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+        .table-row-dark { border: 3px solid transparent; border-radius: 15px; margin-bottom: 10px; display: grid; grid-template-columns: 150px 1.5fr 150px 100px; align-items: center; padding: 15px 25px; gap: 15px; }
+        .table-row-dark:hover { border-color: var(--border-highlight); transform: scale(1.01); }
+
+        .theme-switcher-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--card-bg); border: 3px solid var(--border-highlight); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 999; transition: 0.3s; }
+        .theme-switcher-btn:hover { transform: rotate(45deg) scale(1.1); }
+        .theme-panel { position: fixed; bottom: 100px; right: 30px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 20px; padding: 20px; width: 250px; box-shadow: 0 15px 40px rgba(0,0,0,0.8); z-index: 998; display: none; opacity: 0; transition: 0.3s; }
+        .theme-panel.active { display: block; opacity: 1; }
+        .theme-option { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 10px; transition: 0.2s; color: white; }
+        .theme-option:hover { transform: translateX(5px); border-color: rgba(255,255,255,0.3); }
+
+        /* Estructura Modal Correo Real */
+        .email-modal-wrapper { padding: 0; display: flex; flex-direction: column; max-height: 90vh; background: #ffffff; border: none; overflow: hidden; border-radius: 20px;}
+        .email-modal-header { background: #f8fafc; padding: 25px 35px; border-bottom: 1px solid #e2e8f0; }
+        .email-modal-body { padding: 35px; background: #ffffff; color: #334155; font-family: Arial, sans-serif; white-space: pre-wrap; line-height: 1.6; overflow-y: auto; font-size: 1.05rem; }
+        .email-modal-footer { background: #f8fafc; padding: 15px 35px; border-top: 1px solid #e2e8f0; text-align: right; }
+    </style>
+</head>
+<body class="admin-layout">
+    
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <header class="text-center w-full mb-10 flex flex-col items-center">
+            <h1 class="theme-card theme-text px-12 py-3 rounded-full font-black text-2xl uppercase inline-block border-4 shadow-xl tracking-wider mb-6">
+                Historial de Envíos
+            </h1>
+            <a th:href="@{/convocatorias/nueva}" class="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase px-8 py-3 rounded-xl transition shadow-lg hover:scale-105">
+                <i class="fas fa-plus mr-2"></i> Crear Convocatoria
+            </a>
+        </header>
+
+        <div th:if="${success}" class="max-w-[1200px] w-full bg-green-900/40 border-2 border-green-500 text-green-300 px-6 py-4 rounded-2xl mb-6 font-bold text-center">
+            <i class="fas fa-check-circle mr-2"></i> <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="max-w-[1200px] w-full bg-red-900/40 border-2 border-red-500 text-red-300 px-6 py-4 rounded-2xl mb-6 font-bold text-center">
+            <i class="fas fa-exclamation-circle mr-2"></i> <span th:text="${error}"></span>
+        </div>
+
+        <main class="list-container theme-card">
+            <div class="hidden md:grid grid-cols-[150px_1.5fr_150px_100px] px-6 mb-4 text-[10px] font-black uppercase tracking-[3px] theme-muted gap-15">
+                <span>Fecha Envío</span><span>Asunto</span><span>Audiencia</span><span class="text-center">Acción</span>
+            </div>
+
+            <div class="space-y-3">
+                <div th:each="c : ${convocatorias}" class="table-row-dark theme-row">
+                    <div class="text-xs font-bold theme-muted">
+                        <i class="far fa-calendar-alt mr-1"></i> <span th:text="${#temporals.format(c.fechaCreacion, 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                    
+                    <div class="font-bold theme-text text-sm truncate pr-4" th:text="${c.asunto}"></div>
+                    
+                    <div>
+                        <span th:if="${c.categoria != null}" class="bg-purple-900/30 text-purple-400 border border-purple-800 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider" th:text="${c.categoria.nombre}"></span>
+                        <span th:if="${c.categoria == null}" class="bg-blue-900/30 text-blue-400 border border-blue-800 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider">Todos</span>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button class="theme-btn px-4 py-2 rounded-lg text-xs font-bold uppercase transition hover:scale-105 cursor-pointer" 
+                                th:attr="data-asunto=${c.asunto}, data-mensaje=${c.mensaje}, data-fecha=${#temporals.format(c.fechaCreacion, 'dd/MM/yyyy HH:mm')}, data-dest=${c.categoria != null ? c.categoria.nombre : 'Todos los Usuarios'}"
+                                onclick="openEmailModal(this)">
+                            <i class="fas fa-envelope-open-text"></i> Leer
+                        </button>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(convocatorias)}" class="text-center py-10 rounded-2xl border-2 border-dashed theme-border theme-row">
+                    <i class="fas fa-inbox text-4xl theme-muted mb-3"></i>
+                    <p class="theme-muted font-bold uppercase text-sm">Aún no has enviado ninguna convocatoria.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="emailModal" class="fixed inset-0 z-[500] hidden flex items-center justify-center bg-black/80 backdrop-blur-md transition-opacity p-4">
+        <div class="transform scale-95 transition-transform w-full max-w-5xl email-modal-wrapper shadow-2xl" id="emailModalContent">
+            
+            <div class="email-modal-header flex justify-between items-start">
+                <div class="w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-2xl font-black text-slate-800" id="emailSubject">Asunto...</h4>
+                        <button onclick="closeEmailModal()" class="text-slate-400 hover:text-red-500 transition cursor-pointer bg-transparent border-none outline-none"><i class="fas fa-times text-3xl"></i></button>
+                    </div>
+                    <div class="flex justify-between items-end border-t border-slate-200 pt-4">
+                        <div>
+                            <p class="text-sm text-slate-500 mb-1">De: <span class="font-bold text-slate-800">Almendral TC Admin &lt;<span th:text="'admin@almendraltc.example'">admin@almendraltc.example</span>&gt;</span></p>
+                            <p class="text-sm text-slate-500">Para: <span class="font-black text-slate-700 bg-slate-200 px-3 py-1 rounded-md uppercase tracking-wider text-[10px]" id="emailTo">Todos</span></p>
+                        </div>
+                        <p class="text-sm font-bold text-slate-400" id="emailDate">00/00/0000 00:00</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="email-modal-body" id="emailBody">
+                </div>
+            
+            <div class="email-modal-footer">
+                <button onclick="closeEmailModal()" class="bg-slate-800 hover:bg-black text-white px-8 py-3 rounded-xl font-black uppercase text-xs shadow-md transition hover:scale-105 cursor-pointer">Cerrar Visor</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="theme-switcher-btn" onclick="toggleThemePanel()"><i class="fas fa-palette"></i></button>
+    <div class="theme-panel" id="themePanel">
+        <h4 class="text-sm font-black uppercase text-center mb-4 theme-text border-b pb-2 theme-border">Elige tu estilo</h4>
+        <div id="themeOptions"></div>
+    </div>
+
+    <script>
+        if (typeof globalThemes !== 'undefined') {
+            const themePanelOptions = document.getElementById('themeOptions');
+            for (const [key, data] of Object.entries(globalThemes)) {
+                const btn = document.createElement('div');
+                btn.className = 'theme-option';
+                btn.style.backgroundColor = data.colors.border || data.colors.highlight;
+                btn.innerHTML = `<span class="w-4 h-4 rounded-full bg-white opacity-50"></span> ${data.name}`;
+                btn.onclick = () => { applyThemeGlobal(key); localStorage.setItem('ctt_admin_theme', key); toggleThemePanel(); };
+                themePanelOptions.appendChild(btn);
+            }
+        }
+        function toggleThemePanel() { document.getElementById('themePanel').classList.toggle('active'); }
+
+        function openEmailModal(btn) {
+            document.getElementById('emailSubject').innerText = btn.getAttribute('data-asunto');
+            document.getElementById('emailDate').innerText = btn.getAttribute('data-fecha');
+            document.getElementById('emailTo').innerText = btn.getAttribute('data-dest');
+            
+            // LA CLAVE: RENDERIZAMOS CON innerHTML Y REEMPLAZAMOS LOS \n DEL TEXTO GUARDADO EN BD A <br>
+            document.getElementById('emailBody').innerHTML = btn.getAttribute('data-mensaje').replace(/\n/g, '<br>');
+            
+            const modal = document.getElementById('emailModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => document.getElementById('emailModalContent').classList.replace('scale-95', 'scale-100'), 10);
+        }
+
+        function closeEmailModal() {
+            document.getElementById('emailModalContent').classList.replace('scale-100', 'scale-95');
+            setTimeout(() => document.getElementById('emailModal').classList.add('hidden'), 300);
+        }
+    </script>
+</body>
+</html>

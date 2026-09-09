@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Almendral Tennis Club">
+  <circle cx="32" cy="32" r="30" fill="#1a4731"/>
+  <circle cx="32" cy="32" r="21" fill="none" stroke="#e7ef67" stroke-width="3"/>
+  <path d="M13 20c9 6 9 18 0 24M51 20c-9 6-9 18 0 24" fill="none" stroke="#e7ef67" stroke-width="3"/>
+  <text x="32" y="55" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" font-size="9" font-weight="700" fill="#ffffff">ATC</text>
+</svg>

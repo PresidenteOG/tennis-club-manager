@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nuevo Jugador - Almendral TC</title>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet" />
+    <script src="/vendor/tailwind.js"></script>
+    <style>
+        /* --- TEMAS DINÁMICOS --- */
+        .theme-player { --bg: linear-gradient(180deg, #0c2b1d 0%, #1a4731 100%); --accent: #10b981; }
+        .theme-admin { --bg: radial-gradient(circle at center, #2d3748 0%, #0f172a 100%); --accent: #94a3b8; }
+        :root { --atc-carbono: #1a1a1a; --atc-gris-borde: #475569; --atc-acero-luz: #e2e8f0; }
+
+        body { font-family: "Montserrat", sans-serif; background: var(--bg); background-attachment: fixed; min-height: 100vh; margin: 0; transition: 0.5s; }
+        .header-section { padding: 50px 20px 40px 20px; text-align: center; }
+        .main-pill-title { background: #000000; color: white; padding: 15px 70px; border-radius: 100px; font-weight: 900; font-size: 2rem; text-transform: uppercase; border: 4px solid var(--accent); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); display: inline-block; }
+        .form-container { max-width: 800px; margin: 0 auto 80px auto; background: rgba(255, 255, 255, 0.98); border-radius: 40px; padding: 50px; border: 6px solid var(--atc-gris-borde); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5); }
+        
+        .error-alert-box { background: #450a0a; border-left: 6px solid #ef4444; color: #fee2e2; padding: 20px; border-radius: 20px; margin-bottom: 30px; font-weight: 700; text-transform: uppercase; font-size: 11px; display: flex; align-items: center; gap: 15px; }
+        .label-tech { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--atc-gris-borde); margin-bottom: 8px; }
+        .input-tech { width: 100%; padding: 15px 25px; background: #f8fafc; border: 2px solid var(--atc-acero-luz); border-radius: 15px; font-weight: 700; transition: 0.3s; }
+        .input-tech:focus { outline: none; border-color: var(--accent); background: white; }
+        .btn-submit { width: 100%; background: #000000; color: white; padding: 18px; border-radius: 20px; font-weight: 900; text-transform: uppercase; border: 3px solid var(--accent); transition: 0.3s; margin-top: 20px; cursor: pointer; }
+        .btn-submit:hover { background: var(--accent); transform: translateY(-3px); }
+        .nav-link-tech { font-weight: 900; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 3px; color: var(--accent); display: inline-flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+
+        .checkbox-tech { width: 1.4rem; height: 1.4rem; border-radius: 6px; border: 2px solid var(--atc-acero-luz); cursor: pointer; }
+        .checkbox-tech:checked { background-color: var(--accent); border-color: var(--accent); }
+    </style>
+</head>
+<body th:class="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')} ? 'theme-admin' : 'theme-player'">
+    <header class="header-section">
+        <h1 class="main-pill-title">Nuevo Registro</h1>
+    </header>
+
+    <main class="form-container">
+        <a sec:authorize="hasAuthority('ROLE_ADMIN')" href="/jugadores" class="nav-link-tech">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Volver al listado
+        </a>
+
+        <div th:if="${errorDni}" class="error-alert-box">
+            <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <span th:text="${errorDni}"></span>
+        </div>
+
+        <form th:action="@{/usuarios/guardar}" th:object="${jugador}" method="post">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="input-group md:col-span-2">
+                    <label class="label-tech">DNI / NIE *</label>
+                    <input type="text" th:field="*{dni}" class="input-tech" placeholder="12345678X" required />
+                </div>
+                <div class="input-group">
+                    <label class="label-tech">Nombre</label>
+                    <input type="text" th:field="*{nombre}" class="input-tech" required />
+                </div>
+                <div class="input-group">
+                    <label class="label-tech">Primer Apellido</label>
+                    <input type="text" th:field="*{primerApellido}" class="input-tech" required />
+                </div>
+                <div class="input-group">
+                    <label class="label-tech">Teléfono</label>
+                    <input type="text" th:field="*{telefono}" class="input-tech" placeholder="600 000 000" />
+                </div>
+                <div class="input-group">
+                    <label class="label-tech">Email</label>
+                    <input type="email" th:field="*{email}" class="input-tech" required />
+                </div>
+                <div class="input-group">
+                    <label class="label-tech">Usuario</label>
+                    <input type="text" th:field="*{nombreUsuario}" class="input-tech" required />
+                </div>
+                <div class="input-group">
+                    <label class="label-tech">Contraseña Provisional</label>
+                    <input type="password" th:field="*{password}" class="input-tech" required />
+                </div>
+
+                <div class="input-group md:col-span-2">
+                    <label class="label-tech">Roles Asignados (Multiselección)</label>
+                    <div class="p-5 bg-slate-50 rounded-2xl border-2 border-slate-100 flex flex-wrap gap-6">
+                        <div th:each="rol : ${roles}" class="flex items-center gap-3">
+                            <input type="checkbox" th:value="${rol.id}" th:field="*{roles}" class="checkbox-tech text-slate-800" />
+                            <label class="text-[10px] font-black uppercase text-slate-500" th:text="${rol.nombreRol}"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn-submit">Sincronizar Registro</button>
+        </form>
+    </main>
+</body>
+</html>

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mail Center - Almendral TC</title>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <script src="/vendor/tailwind.js"></script>
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    <style>
+        :root { --bg-grad-1: #1f2937; --bg-grad-2: #0f172a; --card-bg: #1e293b; --card-bg-hover: #0f172a; --border-color: #334155; --border-highlight: #475569; --text-main: #f1f5f9; --text-muted: #94a3b8; --btn-bg: #334155; --btn-hover: #475569; }
+        body { font-family: 'Montserrat', sans-serif; background: radial-gradient(circle at center, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%); color: var(--text-main); min-height: 100vh; overflow-y: scroll; margin: 0; display: flex; transition: background 0.5s ease;}
+        
+        body.admin-layout .main-content { margin-left: 280px; width: calc(100% - 280px); }
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        
+        .form-container { max-width: 1400px; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; }
+        .theme-card { background: var(--card-bg); border-radius: 30px; padding: 35px; border: 4px solid var(--border-color); box-shadow: 0 20px 50px rgba(0,0,0,0.6); transition: 0.3s; display: flex; flex-direction: column; }
+        
+        .theme-input { width: 100%; background: var(--card-bg-hover); border: 2px solid var(--border-color); color: var(--text-main); padding: 15px 20px; border-radius: 12px; font-weight: 500; transition: 0.3s; outline: none; font-size: 0.9rem;}
+        .theme-input:focus { border-color: var(--border-highlight); }
+        .theme-input::placeholder { color: var(--text-muted); opacity: 0.7; }
+
+        .section-title { font-size: 0.65rem; font-weight: 900; color: var(--border-highlight); text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-bottom: 15px;}
+
+        /* Pestañas */
+        .mail-tab { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid var(--border-color); padding-bottom: 20px; flex-wrap: wrap;}
+        .tab-btn { flex: 1; padding: 12px 15px; border-radius: 12px; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; background: var(--card-bg-hover); border: 2px solid var(--border-color); color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;}
+        .tab-btn.active { background: var(--border-highlight); color: var(--text-main); border-color: var(--border-highlight); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.3);}
+        .tab-btn:hover:not(.active) { border-color: var(--border-highlight); color: var(--text-main); }
+
+        .btn-send { width: 100%; padding: 20px; background: var(--btn-bg); color: var(--text-main); border: 2px solid var(--border-color); border-radius: 15px; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; font-size: 0.9rem; transition: all 0.3s ease; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 30px; }
+        .btn-send:hover:not(:disabled) { background: var(--border-highlight); border-color: var(--border-highlight); transform: translateY(-3px); box-shadow: 0 15px 25px rgba(0,0,0,0.4); }
+        .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Estilos Dropdown Buscador (Usuario) */
+        .dropdown-container { position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 2px solid var(--border-highlight); border-radius: 12px; margin-top: 5px; z-index: 50; max-height: 250px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none; }
+        .dropdown-item { padding: 12px 20px; font-weight: 600; color: var(--text-main); cursor: pointer; border-bottom: 1px solid var(--border-color); transition: 0.2s; }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background: var(--border-highlight); }
+        .no-results { padding: 12px 20px; font-weight: 600; color: var(--text-muted); text-align: center; font-style: italic; }
+
+        /* Estilos Custom Select (Equipos) */
+        .custom-select-menu { position: absolute; top: calc(100% + 5px); left: 0; width: 100%; background: var(--card-bg); border: 2px solid var(--border-highlight); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; display: none; flex-direction: column; overflow: hidden; padding: 0;}
+        .custom-select-menu.active { display: flex; }
+
+        /* Mockup Correo Global */
+        .email-preview { background: #ffffff; border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; height: 100%; min-height: 450px; border: 1px solid #e5e7eb; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);}
+        .email-header { background: #f9fafb; padding: 20px 25px; border-bottom: 1px solid #e5e7eb; }
+        .email-body { padding: 30px 25px; flex: 1; font-family: Arial, sans-serif; white-space: pre-wrap; line-height: 1.6; color: #374151; background: #ffffff; font-size: 0.95rem; overflow-y: auto;}
+        .empty-preview { display: flex; align-items: center; justify-content: center; text-align: center; color: #9ca3af; font-style: italic; font-size: 1.1rem; }
+
+        /* Estilos Historial */
+        .table-row-dark { border: 3px solid transparent; border-radius: 15px; margin-bottom: 10px; display: grid; grid-template-columns: 150px 1.5fr 150px 100px; align-items: center; padding: 15px 25px; gap: 15px; background: var(--card-bg-hover); transition: 0.3s;}
+        .table-row-dark:hover { border-color: var(--border-highlight); transform: scale(1.01); }
+        .email-modal-wrapper { padding: 0; display: flex; flex-direction: column; max-height: 90vh; background: #ffffff; border: none; overflow: hidden; border-radius: 20px;}
+        .email-modal-header { background: #f8fafc; padding: 25px 35px; border-bottom: 1px solid #e2e8f0; }
+        .email-modal-body { padding: 35px; background: #ffffff; color: #334155; font-family: Arial, sans-serif; white-space: pre-wrap; line-height: 1.6; overflow-y: auto; font-size: 1.05rem; }
+        .email-modal-footer { background: #f8fafc; padding: 15px 35px; border-top: 1px solid #e2e8f0; text-align: right; }
+
+        .theme-switcher-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--card-bg); border: 3px solid var(--border-highlight); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 999; transition: 0.3s; }
+        .theme-switcher-btn:hover { transform: rotate(45deg) scale(1.1); }
+        .theme-panel { position: fixed; bottom: 100px; right: 30px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 20px; padding: 20px; width: 250px; box-shadow: 0 15px 40px rgba(0,0,0,0.8); z-index: 998; display: none; opacity: 0; transition: 0.3s; }
+        .theme-panel.active { display: block; opacity: 1; }
+        .theme-option { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 10px; transition: 0.2s; color: white; }
+
+        @media (max-width: 1024px) { .form-container { grid-template-columns: 1fr; } .tab-btn{ width: 100%; flex: none; } .table-row-dark { grid-template-columns: 1fr; gap: 10px; text-align: center; } }
+    </style>
+</head>
+<body class="admin-layout">
+    
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <header class="text-center w-full mb-10 relative">
+            <h1 class="theme-card theme-text px-12 py-3 rounded-full font-black text-2xl uppercase inline-block border-4 shadow-xl tracking-wider" style="padding: 15px 40px; border-radius: 50px;">
+                <i class="fas fa-envelope-open-text mr-2" style="color: var(--border-highlight);"></i> Mail Center
+            </h1>
+            <p class="text-xs font-bold uppercase tracking-widest mt-4 theme-muted">Comunicación Global del Club</p>
+        </header>
+
+        <div th:if="${success}" class="max-w-[1400px] w-full bg-emerald-900/50 border border-emerald-500 text-emerald-200 px-6 py-4 rounded-xl mb-6 font-black text-center text-xs uppercase tracking-widest">
+            <i class="fas fa-check-circle mr-2"></i> <span th:text="${success}"></span>
+        </div>
+
+        <div class="form-container">
+            
+            <div class="theme-card">
+                
+                <div class="mail-tab">
+                    <button type="button" id="tabTodos" class="tab-btn active" onclick="activarTab('todos')">
+                        <i class="fas fa-globe-americas"></i> Todos
+                        <span class="bg-white/20 px-2 py-0.5 rounded-full text-[9px]" th:text="${Usuarios != null ? Usuarios.size() : '0'}"></span>
+                    </button>
+                    <button type="button" id="tabUsuario" class="tab-btn" onclick="activarTab('usuario')">
+                        <i class="fas fa-search"></i> Usuario
+                    </button>
+                    <button type="button" id="tabEquipo" class="tab-btn" onclick="activarTab('equipo')">
+                        <i class="fas fa-layer-group"></i> Equipo
+                        <span class="bg-white/20 px-2 py-0.5 rounded-full text-[9px]" th:text="${categorias != null ? categorias.size() : '0'}"></span>
+                    </button>
+                </div>
+
+                <form id="mailForm" onsubmit="event.preventDefault();" class="space-y-6 flex-grow flex flex-col">
+                    
+                    <div class="section-title">Destinatario</div>
+                    
+                    <div id="formTodos" class="mb-4">
+                        <div class="p-4 rounded-xl border-2 border-blue-900/50 bg-blue-900/20 text-blue-400 font-bold text-xs uppercase tracking-widest flex items-center gap-3">
+                            <i class="fas fa-bullhorn text-xl"></i> El mensaje llegará a todos los socios activos.
+                        </div>
+                    </div>
+
+                    <div id="formUsuario" class="mb-4 hidden">
+                        <div class="relative w-full">
+                            <i class="fas fa-search absolute left-4 top-[16px] theme-muted"></i>
+                            <input type="text" id="searchUsuarioInput" class="theme-input pl-12" placeholder="Buscar por nombre, email..." autocomplete="off">
+                            <i class="fas fa-times absolute right-4 top-[16px] theme-muted cursor-pointer hidden hover:text-red-500 transition" id="clearUsuarioSearch"></i>
+                            <input type="hidden" id="selectUsuario" value="">
+                            
+                            <div class="dropdown-container" id="usuarioDropdownList">
+                                <div th:each="usuario : ${Usuarios}" 
+                                     class="dropdown-item usuario-item"
+                                     th:attr="data-id=${usuario.id}, data-name=${usuario.nombre + ' ' + usuario.primerApellido + ' - ' + usuario.email}">
+                                     <i class="fas fa-user mr-2 theme-muted"></i>
+                                     <span th:text="${usuario.nombre + ' ' + usuario.primerApellido + ' - ' + usuario.email}"></span>
+                                </div>
+                                <div class="no-results hidden" id="usuarioNoResults">No se encontraron usuarios.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="formEquipo" class="mb-4 hidden">
+                        <div class="relative select-none">
+                            <div id="filterEquipoBtn" class="w-full px-4 py-3 rounded-xl font-bold border-2 theme-input cursor-pointer flex justify-between items-center transition">
+                                <span id="filterEquipoText">-- Elegir equipo --</span>
+                                <i class="fas fa-chevron-down theme-muted transition-transform duration-300" id="filterEquipoIcon"></i>
+                            </div>
+                            <div id="filterEquipoMenu" class="custom-select-menu">
+                                <div th:each="categoria : ${categorias}" 
+                                     class="px-4 py-3 cursor-pointer transition font-bold theme-text border-b theme-border equipo-option" 
+                                     onmouseover="this.style.background='var(--border-highlight)'" onmouseout="this.style.background='transparent'" 
+                                     th:attr="data-val=${categoria.id}, data-name=${categoria.nombre}" th:text="${categoria.nombre}"></div>
+                            </div>
+                            <input type="hidden" id="selectCategoria" value="">
+                        </div>
+                    </div>
+
+                    <div class="section-title mt-4">Contenido del Correo</div>
+                    
+                    <div>
+                        <label class="block text-[10px] font-black uppercase theme-muted mb-2 tracking-widest ml-1">Asunto Oficial</label>
+                        <input type="text" id="asuntoMail" class="theme-input" placeholder="Ej: Renovación de cuotas, Torneo Social..." required>
+                    </div>
+
+                    <div class="flex-grow flex flex-col">
+                        <label class="block text-[10px] font-black uppercase theme-muted mb-2 tracking-widest ml-1 mt-4">Cuerpo del Comunicado</label>
+                        <textarea id="contenidoMail" class="theme-input flex-grow" rows="8" placeholder="Estimado socio/a...\n\nRedacta aquí tu mensaje." required></textarea>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-6 border-t theme-border mt-8">
+                        <button type="button" onclick="document.getElementById('mailForm').reset(); actualizarPreview();" class="text-xs font-bold theme-muted hover:text-white transition uppercase bg-transparent border-none cursor-pointer"><i class="fas fa-eraser"></i> Limpiar</button>
+                        
+                        <button type="button" onclick="validarYAbrirModal()" class="btn-send mt-0 w-auto px-8">
+                            Enviar Email <i class="fas fa-paper-plane ml-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="theme-card flex flex-col" style="background: var(--bg-grad-1);">
+                <h3 class="text-xl font-bold mb-4 theme-text uppercase tracking-wide">
+                    <i class="fas fa-eye" style="color: var(--border-highlight);"></i> Vista Previa Institucional
+                </h3>
+                
+                <div class="email-preview shadow-2xl flex-grow">
+                    <div class="email-header">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xs font-bold text-gray-500 w-16">De:</span>
+                            <span class="text-sm font-semibold text-gray-800">Almendral TC Admin &lt;<span th:text="'admin@almendraltc.example'">admin@almendraltc.example</span>&gt;</span>
+                        </div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-xs font-bold text-gray-500 w-16">Para:</span>
+                            <span class="text-xs font-black uppercase tracking-widest bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 rounded-lg" id="previewDestino">Todos los Usuarios</span>
+                        </div>
+                        <div class="flex items-start gap-2 pt-3 border-t border-gray-200">
+                            <span class="text-xs font-bold text-gray-500 w-16 mt-1">Asunto:</span>
+                            <span class="text-lg font-black text-gray-900" id="previewAsunto">Comunicado</span>
+                        </div>
+                    </div>
+                    <div class="email-body empty-preview" id="previewMensaje">
+                        El cuerpo de tu correo aparecerá aquí formateado.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="theme-card w-full max-w-[1400px]">
+            <h3 class="text-xl font-bold mb-6 theme-text uppercase tracking-wide border-b pb-4 theme-border">
+                <i class="fas fa-history" style="color: var(--border-highlight);"></i> Historial de Envíos
+            </h3>
+            
+            <div class="hidden md:grid grid-cols-[150px_1.5fr_150px_100px] px-6 mb-4 text-[10px] font-black uppercase tracking-[3px] theme-muted gap-15">
+                <span>Fecha Envío</span><span>Asunto</span><span>Destinatario</span><span class="text-center">Acción</span>
+            </div>
+
+            <div class="space-y-3">
+                <div th:each="mail : ${historial}" class="table-row-dark">
+                    <div class="text-xs font-bold theme-muted">
+                        <i class="far fa-calendar-alt mr-1"></i> <span th:text="${#temporals.format(mail.fechaCreacion, 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                    
+                    <div class="font-bold theme-text text-sm truncate pr-4" th:text="${mail.asunto}"></div>
+                    
+                    <div>
+                        <span th:if="${mail.categoria != null}" class="bg-blue-900/30 text-blue-400 border border-blue-800 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider truncate block" 
+                              th:text="${'Equipo: ' + mail.categoria.nombre}"></span>
+                        <span th:if="${mail.categoria == null}" class="bg-purple-900/30 text-purple-400 border border-purple-800 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider truncate block">
+                              Global / Usuario
+                        </span>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button class="bg-transparent border border-[color:var(--border-color)] text-[color:var(--text-main)] px-4 py-2 rounded-lg text-xs font-bold uppercase transition hover:scale-105 cursor-pointer hover:border-[color:var(--border-highlight)] hover:bg-[color:var(--card-bg)]" 
+                                th:attr="data-asunto=${mail.asunto}, data-mensaje=${mail.mensaje}, data-fecha=${#temporals.format(mail.fechaCreacion, 'dd/MM/yyyy HH:mm')}, data-dest=${mail.categoria != null ? 'Equipo: ' + mail.categoria.nombre : 'Global / Usuario'}"
+                                onclick="openHistoryModal(this)">
+                            <i class="fas fa-eye"></i> Leer
+                        </button>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(historial)}" class="text-center py-10 rounded-2xl border-2 border-dashed theme-border" style="background: var(--card-bg-hover);">
+                    <i class="fas fa-inbox text-4xl theme-muted mb-3"></i>
+                    <p class="theme-muted font-bold uppercase text-sm">Aún no hay correos en el historial.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmSendModal" class="fixed inset-0 z-[500] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity">
+        <div class="theme-card transform scale-95 transition-transform w-full mx-4" id="confirmSendModalContent" style="max-width: 450px; padding: 50px; border-radius: 30px;">
+            <div class="text-center">
+                <div class="w-20 h-20 mx-auto bg-amber-900/30 rounded-full flex items-center justify-center mb-6 border-2 border-amber-500/50">
+                    <i class="fas fa-exclamation-triangle text-4xl text-amber-500"></i>
+                </div>
+                <h3 class="text-2xl font-black uppercase theme-text mb-3">¿Confirmar Envío?</h3>
+                <p class="theme-muted font-medium mb-10 text-sm leading-relaxed">
+                    Vas a enviar correos electrónicos reales a <span id="modalDestinoText" class="font-bold text-white">Todos los usuarios</span>. 
+                    <br><br><span class="text-amber-500 font-bold uppercase text-[10px] tracking-widest">Esta acción no se puede deshacer.</span>
+                </p>
+                <div class="flex gap-4 justify-center">
+                    <button type="button" onclick="closeConfirmModal()" class="w-full py-4 rounded-xl font-bold uppercase theme-muted border-2 transition hover:text-white" style="border-color: var(--border-color); background: transparent;">Revisar</button>
+                    <button type="button" id="realSubmitBtn" onclick="ejecutarEnvioAPI()" class="w-full py-4 rounded-xl font-bold uppercase text-white bg-blue-600 hover:bg-blue-700 shadow-lg text-xs flex items-center justify-center transition cursor-pointer border-none">
+                        Sí, Enviar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="historyModal" class="fixed inset-0 z-[500] hidden flex items-center justify-center bg-black/80 backdrop-blur-md transition-opacity p-4">
+        <div class="transform scale-95 transition-transform w-full max-w-5xl email-modal-wrapper shadow-2xl" id="historyModalContent">
+            <div class="email-modal-header flex justify-between items-start">
+                <div class="w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-2xl font-black text-slate-800" id="historySubject">Asunto...</h4>
+                        <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-red-500 transition cursor-pointer bg-transparent border-none outline-none"><i class="fas fa-times text-3xl"></i></button>
+                    </div>
+                    <div class="flex justify-between items-end border-t border-slate-200 pt-4">
+                        <div>
+                            <p class="text-sm text-slate-500 mb-1">De: <span class="font-bold text-slate-800">Almendral TC Admin &lt;<span th:text="'admin@almendraltc.example'">admin@almendraltc.example</span>&gt;</span></p>
+                            <p class="text-sm text-slate-500">Para: <span class="font-black text-slate-700 bg-slate-200 px-3 py-1 rounded-md uppercase tracking-wider text-[10px]" id="historyTo">Todos</span></p>
+                        </div>
+                        <p class="text-sm font-bold text-slate-400" id="historyDate">00/00/0000 00:00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="email-modal-body" id="historyBody"></div>
+            <div class="email-modal-footer">
+                <button onclick="closeHistoryModal()" class="bg-slate-800 hover:bg-black text-white px-8 py-3 rounded-xl font-black uppercase text-xs shadow-md transition hover:scale-105 cursor-pointer border-none">Cerrar Visor</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalExito" class="fixed inset-0 z-[600] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity">
+        <div class="theme-card transform scale-95 transition-transform w-full mx-4" id="modalExitoContent" style="max-width: 400px; padding: 50px; border-radius: 30px; text-align: center;">
+            <div class="w-20 h-20 mx-auto bg-emerald-900/30 rounded-full flex items-center justify-center mb-6 border-2 border-emerald-500/50">
+                <i class="fas fa-check text-4xl text-emerald-500"></i>
+            </div>
+            <h3 class="text-xl font-black uppercase theme-text mb-3">¡Correos Enviados!</h3>
+            <p id="modalExitoMensaje" class="theme-muted font-medium mb-8 text-sm">Operación completada.</p>
+            <button onclick="cerrarModalExito()" class="w-full py-3 rounded-xl font-bold uppercase text-white bg-slate-700 hover:bg-slate-600 transition border-none cursor-pointer">Aceptar</button>
+        </div>
+    </div>
+
+    <button class="theme-switcher-btn" onclick="toggleThemePanel()"><i class="fas fa-palette"></i></button>
+    <div class="theme-panel" id="themePanel">
+        <h4 class="text-sm font-black uppercase text-center mb-4 theme-text border-b pb-2 theme-border">Elige tu estilo</h4>
+        <div id="themeOptions"></div>
+    </div>
+
+    <script>
+        // Temas
+        if (typeof globalThemes !== 'undefined') {
+            const themePanelOptions = document.getElementById('themeOptions');
+            for (const [key, data] of Object.entries(globalThemes)) {
+                const btn = document.createElement('div');
+                btn.className = 'theme-option';
+                btn.style.backgroundColor = data.colors.border || data.colors.highlight;
+                btn.innerHTML = `<span class="w-4 h-4 rounded-full bg-white opacity-50"></span> ${data.name}`;
+                btn.onclick = () => { applyThemeGlobal(key); localStorage.setItem('ctt_admin_theme', key); toggleThemePanel(); };
+                themePanelOptions.appendChild(btn);
+            }
+        }
+        function toggleThemePanel() { document.getElementById('themePanel').classList.toggle('active'); }
+
+        // ESTADOS Y ELEMENTOS GLOBALES
+        let tipoEnvio = 'todos';
+        
+        const inputAsunto = document.getElementById('asuntoMail');
+        const inputMensaje = document.getElementById('contenidoMail');
+        
+        const previewAsunto = document.getElementById('previewAsunto');
+        const previewMensaje = document.getElementById('previewMensaje');
+        const previewDestino = document.getElementById('previewDestino');
+
+        // BÚSQUEDA PREDICTIVA USUARIO
+        const searchUsuarioInput = document.getElementById('searchUsuarioInput');
+        const selectUsuarioHidden = document.getElementById('selectUsuario');
+        const usuarioDropdownList = document.getElementById('usuarioDropdownList');
+        const usuarioItems = document.querySelectorAll('.usuario-item');
+        const clearUsuarioSearch = document.getElementById('clearUsuarioSearch');
+        const usuarioNoResults = document.getElementById('usuarioNoResults');
+
+        searchUsuarioInput.addEventListener('focus', () => {
+            usuarioDropdownList.style.display = 'block';
+            filterUsuarios();
+        });
+
+        searchUsuarioInput.addEventListener('input', () => {
+            filterUsuarios();
+            selectUsuarioHidden.value = '';
+            clearUsuarioSearch.style.display = searchUsuarioInput.value.length > 0 ? 'block' : 'none';
+            actualizarPreview();
+        });
+
+        function filterUsuarios() {
+            const filter = searchUsuarioInput.value.toLowerCase();
+            let hasVisible = false;
+            usuarioItems.forEach(item => {
+                const text = item.getAttribute('data-name').toLowerCase();
+                if (text.includes(filter)) {
+                    item.style.display = 'block';
+                    hasVisible = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            usuarioNoResults.style.display = hasVisible ? 'none' : 'block';
+        }
+
+        usuarioItems.forEach(item => {
+            item.addEventListener('click', () => {
+                searchUsuarioInput.value = item.getAttribute('data-name');
+                selectUsuarioHidden.value = item.getAttribute('data-id');
+                usuarioDropdownList.style.display = 'none';
+                clearUsuarioSearch.style.display = 'block';
+                actualizarPreview();
+            });
+        });
+
+        clearUsuarioSearch.addEventListener('click', () => {
+            searchUsuarioInput.value = '';
+            selectUsuarioHidden.value = '';
+            clearUsuarioSearch.style.display = 'none';
+            filterUsuarios();
+            searchUsuarioInput.focus();
+            actualizarPreview();
+        });
+
+        // DROPDOWN CUSTOM EQUIPOS
+        const filterEquipoBtn = document.getElementById('filterEquipoBtn');
+        const filterEquipoMenu = document.getElementById('filterEquipoMenu');
+        const filterEquipoText = document.getElementById('filterEquipoText');
+        const selectCategoriaHidden = document.getElementById('selectCategoria');
+        const filterEquipoIcon = document.getElementById('filterEquipoIcon');
+
+        filterEquipoBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterEquipoMenu.classList.toggle('active');
+            filterEquipoIcon.style.transform = filterEquipoMenu.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+        });
+
+        document.querySelectorAll('.equipo-option').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectCategoriaHidden.value = item.getAttribute('data-val');
+                filterEquipoText.innerText = item.getAttribute('data-name');
+                filterEquipoMenu.classList.remove('active');
+                filterEquipoIcon.style.transform = 'rotate(0deg)';
+                actualizarPreview();
+            });
+        });
+
+        // Cerrar dropdowns si se hace click fuera
+        document.addEventListener('click', (e) => {
+            if (!searchUsuarioInput.contains(e.target) && !usuarioDropdownList.contains(e.target)) {
+                usuarioDropdownList.style.display = 'none';
+            }
+            if (filterEquipoMenu.classList.contains('active')) {
+                filterEquipoMenu.classList.remove('active');
+                filterEquipoIcon.style.transform = 'rotate(0deg)';
+            }
+        });
+
+        // GESTIÓN DE PESTAÑAS
+        function activarTab(tab) {
+            tipoEnvio = tab;
+            document.getElementById('tabTodos').classList.remove('active');
+            document.getElementById('tabUsuario').classList.remove('active');
+            document.getElementById('tabEquipo').classList.remove('active');
+            document.getElementById('formTodos').classList.add('hidden');
+            document.getElementById('formUsuario').classList.add('hidden');
+            document.getElementById('formEquipo').classList.add('hidden');
+            
+            if (tab === 'todos') {
+                document.getElementById('tabTodos').classList.add('active');
+                document.getElementById('formTodos').classList.remove('hidden');
+                document.getElementById('btnText').innerText = 'Enviar a Todos';
+            } else if (tab === 'usuario') {
+                document.getElementById('tabUsuario').classList.add('active');
+                document.getElementById('formUsuario').classList.remove('hidden');
+                document.getElementById('btnText').innerText = 'Enviar al Usuario';
+            } else if (tab === 'equipo') {
+                document.getElementById('tabEquipo').classList.add('active');
+                document.getElementById('formEquipo').classList.remove('hidden');
+                document.getElementById('btnText').innerText = 'Enviar al Equipo';
+            }
+            actualizarPreview();
+        }
+
+        // VISTA PREVIA GLOBAL DEL MENSAJE
+        function actualizarPreview() {
+            if (tipoEnvio === 'todos') {
+                previewDestino.innerText = "Todos los Usuarios";
+            } else if (tipoEnvio === 'usuario' && selectUsuarioHidden.value) {
+                previewDestino.innerText = searchUsuarioInput.value.split(' - ')[0];
+            } else if (tipoEnvio === 'equipo' && selectCategoriaHidden.value) {
+                previewDestino.innerText = "Equipo: " + filterEquipoText.innerText;
+            } else {
+                previewDestino.innerText = "Esperando selección...";
+            }
+
+            previewAsunto.innerText = inputAsunto.value || 'Sin Asunto';
+
+            if(!inputMensaje.value.trim()) {
+                previewMensaje.classList.add('empty-preview');
+                previewMensaje.innerHTML = 'El cuerpo de tu correo aparecerá aquí formateado.';
+            } else {
+                previewMensaje.classList.remove('empty-preview');
+                let escapedText = inputMensaje.value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                let textoHtml = `📣 <b>COMUNICADO OFICIAL - ALMENDRAL TC</b> 📣<br><br>`;
+                textoHtml += `Estimado socio/a,<br><br>`;
+                textoHtml += escapedText.replace(/\n/g, '<br>');
+                previewMensaje.innerHTML = textoHtml;
+            }
+        }
+
+        inputAsunto.addEventListener('input', actualizarPreview);
+        inputMensaje.addEventListener('input', actualizarPreview);
+
+        // LÓGICA DE ENVÍO Y CONFIRMACIÓN GRAVE
+        function validarYAbrirModal() {
+            const subject = inputAsunto.value.trim();
+            const content = inputMensaje.value.trim();
+
+            if (!subject || !content) {
+                alert('El asunto y el cuerpo del mensaje son obligatorios.');
+                return;
+            }
+
+            let destinatarioReal = "";
+            if (tipoEnvio === 'usuario') {
+                if (!selectUsuarioHidden.value) { alert('Debes seleccionar un usuario del buscador.'); return; }
+                destinatarioReal = searchUsuarioInput.value.split(' - ')[0];
+            } else if (tipoEnvio === 'equipo') {
+                if (!selectCategoriaHidden.value) { alert('Debes seleccionar un equipo del menú.'); return; }
+                destinatarioReal = "todo el equipo " + filterEquipoText.innerText;
+            } else {
+                destinatarioReal = "TODOS los usuarios de la base de datos";
+            }
+
+            document.getElementById('modalDestinoText').innerText = destinatarioReal;
+            
+            const modal = document.getElementById('confirmSendModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => document.getElementById('confirmSendModalContent').classList.replace('scale-95', 'scale-100'), 10);
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmSendModalContent').classList.replace('scale-100', 'scale-95');
+            setTimeout(() => document.getElementById('confirmSendModal').classList.add('hidden'), 300);
+        }
+
+        async function ejecutarEnvioAPI() {
+            const btn = document.getElementById('realSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Enviando...';
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            let url = '';
+            let formattedContent = `📣 <b>COMUNICADO OFICIAL - ALMENDRAL TC</b> 📣\n\nEstimado socio/a,\n\n${inputMensaje.value.trim()}`;
+
+            let payload = {
+                subject: inputAsunto.value.trim(),
+                content: formattedContent
+            };
+
+            if (tipoEnvio === 'todos') {
+                url = '/api/mail/send-massive';
+            } else if (tipoEnvio === 'usuario') {
+                url = '/api/mail/send-to-user';
+                payload.usuarioId = parseInt(selectUsuarioHidden.value);
+            } else if (tipoEnvio === 'equipo') {
+                url = '/api/mail/send-to-category';
+                payload.categoriaId = parseInt(selectCategoriaHidden.value);
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                closeConfirmModal();
+
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // Reset
+                    inputAsunto.value = '';
+                    inputMensaje.value = '';
+                    selectUsuarioHidden.value = '';
+                    searchUsuarioInput.value = '';
+                    selectCategoriaHidden.value = '';
+                    filterEquipoText.innerText = '-- Elegir equipo --';
+                    clearUsuarioSearch.style.display = 'none';
+                    actualizarPreview();
+                    
+                    mostrarModalExito(result.mensaje || 'Correos enviados correctamente.');
+                } else {
+                    const errorTxt = await response.text();
+                    alert('Error en el servidor: ' + errorTxt);
+                }
+            } catch (error) {
+                closeConfirmModal();
+                console.error(error);
+                alert('Error crítico de conexión.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Sí, Enviar';
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function mostrarModalExito(mensaje) {
+            document.getElementById('modalExitoMensaje').innerText = mensaje;
+            const modal = document.getElementById('modalExito');
+            modal.classList.remove('hidden');
+            setTimeout(() => document.getElementById('modalExitoContent').classList.replace('scale-95', 'scale-100'), 10);
+        }
+
+        function cerrarModalExito() {
+            document.getElementById('modalExitoContent').classList.replace('scale-100', 'scale-95');
+            setTimeout(() => {
+                document.getElementById('modalExito').classList.add('hidden');
+                window.location.reload(); // Recargamos para actualizar el historial inferior
+            }, 300);
+        }
+
+        // Lógica Modal Historial (Leer)
+        function openHistoryModal(btn) {
+            document.getElementById('historySubject').innerText = btn.getAttribute('data-asunto');
+            document.getElementById('historyDate').innerText = btn.getAttribute('data-fecha');
+            document.getElementById('historyTo').innerText = btn.getAttribute('data-dest');
+            document.getElementById('historyBody').innerHTML = btn.getAttribute('data-mensaje').replace(/\n/g, '<br>');
+            
+            const modal = document.getElementById('historyModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => document.getElementById('historyModalContent').classList.replace('scale-95', 'scale-100'), 10);
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModalContent').classList.replace('scale-100', 'scale-95');
+            setTimeout(() => document.getElementById('historyModal').classList.add('hidden'), 300);
+        }
+    </script>
+</body>
+</html>

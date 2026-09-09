@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Técnico - Almendral TC</title>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <script src="/vendor/tailwind.js"></script>
+    <style>
+        :root {
+            --atc-verde-profundo: #0c2b1d;
+            --atc-verde-medio: #1a4731;
+            --atc-esmeralda: #10b981;
+            --atc-negro-puro: #000000;
+            --atc-gris-borde: #64748b; 
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(180deg, var(--atc-verde-profundo) 0%, var(--atc-verde-medio) 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0; padding: 0;
+        }
+
+        /* --- HEADER PLATINUM --- */
+        .header-section {
+            padding: 60px 20px 110px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .main-pill-title {
+            background: var(--atc-negro-puro);
+            color: white;
+            padding: 15px 80px;
+            border-radius: 100px;
+            font-weight: 900;
+            font-size: 3rem;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            display: inline-block;
+            line-height: 1;
+            margin-bottom: 35px;
+            border: 4px solid var(--atc-esmeralda);
+        }
+
+        .stats-subheader {
+            display: flex; gap: 20px; align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px 35px; border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* --- CONTENEDOR DE LISTA --- */
+        .list-container {
+            max-width: 1100px;
+            margin: -60px auto 80px auto;
+            background: white;
+            border-radius: 50px;
+            padding: 55px;
+            border: 4px solid var(--atc-gris-borde);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+        }
+
+        /* Grid ajustado a 3 columnas: Avatar - Empleado - Contacto */
+        .staff-grid-layout {
+            display: grid;
+            grid-template-columns: 80px 1.5fr 1fr;
+            align-items: center;
+        }
+
+        .staff-row {
+            padding: 22px 30px;
+            border-radius: 30px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            border: 2px solid #f1f5f9;
+            background: white;
+        }
+
+        .staff-row:hover {
+            transform: scale(1.01);
+            border-color: var(--atc-esmeralda);
+            background: #f8fafc;
+        }
+
+        .avatar-initial {
+            width: 55px; height: 55px;
+            background: var(--atc-negro-puro);
+            color: white; border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.4rem;
+            border: 2px solid var(--atc-esmeralda);
+        }
+
+        /* Buscador */
+        .search-container {
+            max-width: 650px; width: 90%;
+            margin-top: 45px; position: relative;
+        }
+
+        .search-bar {
+            width: 100%; background: white;
+            border-radius: 25px; padding: 18px 30px 18px 60px;
+            font-size: 1.1rem; font-weight: 700;
+            color: var(--atc-negro-puro);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border: 2px solid var(--atc-esmeralda);
+            outline: none;
+        }
+
+        .search-icon { position: absolute; left: 25px; top: 50%; transform: translateY(-50%); color: var(--atc-esmeralda); }
+
+        .column-label {
+            font-size: 11px; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 3px; color: var(--atc-gris-borde);
+            padding: 0 35px 15px 35px;
+        }
+    </style>
+</head>
+<body class="pb-20">
+
+    <header class="header-section">
+        <h1 class="main-pill-title">Empleados</h1>
+        
+        <div class="stats-subheader">
+            <span class="font-bold text-sm tracking-widest uppercase">
+                Plantilla: <span id="activeCount" class="text-emerald-400 text-xl ml-2" th:text="${trabajadores.size()}">0</span>
+            </span>
+            <div class="w-1 h-6 bg-white/20"></div>
+            <span class="font-bold text-sm tracking-widest uppercase">Cuerpo Técnico</span>
+        </div>
+
+        <div class="search-container">
+            <svg class="search-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input type="text" id="staffSearch" placeholder="Buscar empleado por nombre o correo..." class="search-bar">
+        </div>
+    </header>
+
+    <main class="list-container">
+        
+        <div class="flex justify-start items-center mb-14 px-2">
+            <a href="javascript:history.back()" class="flex items-center gap-2 font-900 text-[10px] uppercase tracking-[3px] text-slate-400 hover:text-black transition-all cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <b>Volver</b>
+            </a>
+        </div>
+
+        <div class="hidden md:grid staff-grid-layout column-label">
+            <div></div> 
+            <span>Empleado</span>
+            <span>Contacto</span>
+        </div>
+
+        <div id="staffList" class="space-y-4">
+            <div th:each="trabajador : ${trabajadores}" class="staff-row staff-grid-layout group">
+                <div class="avatar-initial" th:text="${#strings.substring(trabajador.nombre, 0, 1)}">E</div>
+                
+                <div class="flex flex-col">
+                    <span class="font-900 text-black text-lg uppercase tracking-tighter name-field" th:text="${trabajador.nombre}">Nombre</span>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-emerald-500 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-sm font-700 text-slate-500 email-field" th:text="${trabajador.email}">staff@almendraltc.example</span>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${trabajadores.empty}" class="py-20 text-center border-2 border-dashed border-gray-200 rounded-[40px]">
+            <p class="text-gray-300 font-black uppercase text-xs tracking-widest">No hay personal registrado</p>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('staffSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.staff-row');
+            let count = 0;
+
+            rows.forEach(row => {
+                const name = row.querySelector('.name-field').textContent.toLowerCase();
+                const email = row.querySelector('.email-field').textContent.toLowerCase();
+
+                if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                    row.style.display = 'grid';
+                    count++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            document.getElementById('activeCount').textContent = count;
+        });
+    </script>
+
+    <footer class="text-center opacity-40">
+        <p class="text-[9px] text-white font-black uppercase tracking-[10px]">Almendral TC 2026</p>
+    </footer>
+
+</body>
+</html>

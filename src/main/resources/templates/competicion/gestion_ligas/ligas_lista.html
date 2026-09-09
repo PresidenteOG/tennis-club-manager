@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Ligas - Almendral TC</title>
+    <script src="/vendor/tailwind.js"></script>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root { --bg-grad-1: #1f2937; --bg-grad-2: #0f172a; --card-bg: #1e293b; --card-bg-hover: #0f172a; --border-color: #334155; --border-highlight: #475569; --text-main: #f1f5f9; --text-muted: #94a3b8; --btn-bg: #334155; --btn-hover: #475569; }
+        body { font-family: 'Montserrat', sans-serif; margin: 0; display: flex; background: radial-gradient(circle at center, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%); background-attachment: fixed; color: var(--text-main); min-height: 100vh; overflow-y: scroll; transition: background 0.5s ease; }
+
+        .theme-card { background: var(--card-bg); border-color: var(--border-color); transition: all 0.3s ease; }
+        .theme-text { color: var(--text-main); }
+        .theme-muted { color: var(--text-muted); }
+        .theme-border { border-color: var(--border-color); }
+        .theme-btn { background: var(--btn-bg); color: var(--text-main); transition: 0.3s; border: 1px solid var(--border-color); }
+        .theme-btn:hover { background: var(--border-highlight); border-color: var(--border-highlight); }
+
+        body.admin-layout .main-content { margin-left: 280px; width: calc(100% - 280px); }
+        body.player-layout .main-content { margin-left: 0; width: 100%; }
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
+
+        @media (max-width: 1200px) { body.admin-layout .main-content { margin-left: 240px; width: calc(100% - 240px); } }
+        @media (max-width: 768px) { body.admin-layout .main-content { margin-left: 70px; width: calc(100% - 70px); } .liga-header{ flex-direction: column; gap: 20px;} }
+
+        .list-container { max-width: 1100px; width: 95%; margin: 50px auto; border-radius: 40px; padding: 50px; border: 6px solid var(--border-color); box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5); background: var(--card-bg); }
+        
+        .liga-header { background: var(--card-bg-hover); padding: 25px 40px; border-radius: 25px; display: flex; justify-content: space-between; align-items: center; border: 2px solid var(--border-color); border-left: 8px solid var(--border-highlight); transition: 0.3s; cursor: pointer; }
+        .liga-header:hover { border-color: var(--border-highlight); }
+
+        .cat-card { background: var(--bg-grad-2); border: 2px solid var(--border-highlight); padding: 20px; border-radius: 20px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .cat-card:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(0,0,0,0.4); }
+
+        .btn-danger-tech { background: rgba(153, 27, 27, 0.2); color: #fca5a5; border: 1px solid #991b1b; padding: 10px 15px; border-radius: 10px; font-size: 10px; font-weight: 900; text-transform: uppercase; transition: 0.3s; cursor: pointer; }
+        .btn-danger-tech:hover { background: #dc2626; color: white; transform: scale(1.05); }
+
+        .gen-MASCULINO { background-color: rgba(37, 99, 235, 0.2); color: #60a5fa; border: 1px solid #3b82f6; }
+        .gen-FEMENINO { background-color: rgba(225, 29, 72, 0.2); color: #f472b6; border: 1px solid #ec4899; }
+        .gen-MIXTO { background-color: rgba(22, 163, 74, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+
+        .theme-switcher-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--card-bg); border: 3px solid var(--border-highlight); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 999; transition: 0.3s; }
+        .theme-switcher-btn:hover { transform: rotate(45deg) scale(1.1); }
+        .theme-panel { position: fixed; bottom: 100px; right: 30px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 20px; padding: 20px; width: 250px; box-shadow: 0 15px 40px rgba(0,0,0,0.8); z-index: 998; display: none; opacity: 0; transition: 0.3s; }
+        .theme-panel.active { display: block; opacity: 1; }
+        .theme-option { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 10px; transition: 0.2s; color: white; }
+        .theme-option:hover { transform: translateX(5px); border-color: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body class="theme-admin" th:classappend="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')} ? 'admin-layout' : 'player-layout'">
+    
+    <div th:if="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')}" th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <header class="py-10 text-center w-full relative">
+            <h1 class="inline-block theme-card theme-text px-12 py-4 rounded-full border-4 text-3xl font-900 uppercase tracking-widest shadow-2xl">
+                Ligas & Divisiones
+            </h1>
+        </header>
+
+        <main class="list-container theme-card shadow-2xl">
+            <div class="flex justify-end mb-10 px-4">
+                <a href="/ligas/nueva" class="theme-btn px-6 py-3 rounded-xl font-900 text-[10px] uppercase shadow-lg hover:scale-105">
+                    <i class="fas fa-plus mr-2"></i> Crear Competición
+                </a>
+            </div>
+
+            <div th:each="liga : ${ligas}" th:if="${liga != null}" class="mb-14">
+                
+                <div class="liga-header shadow-xl" onclick="toggleLigaCollapse(this)">
+                    <div class="max-w-[65%] w-full">
+                        <span class="text-[9px] font-black uppercase tracking-[4px]" style="color: var(--border-highlight);">Categoría Master</span>
+                        <h2 class="text-2xl font-900 uppercase tracking-tighter theme-text" th:text="${liga.nombre}">LIGA</h2>
+                        <p class="text-sm font-medium mt-3 leading-relaxed theme-muted" th:text="${liga.descripcion ?: 'Sin descripción técnica registrada.'}"></p>
+                    </div>
+                    <div class="flex items-center gap-4 w-full md:w-auto mt-4 md:mt-0 justify-end">
+                        <a th:href="@{'/ligas/editar/' + ${liga.id}}" class="theme-btn text-[10px] font-900 px-5 py-3 rounded-lg transition" onclick="event.stopPropagation()"><i class="fas fa-cog mr-1"></i> Ajustes</a>
+                        <button th:onclick="'event.stopPropagation(); openDeleteModal(\'/ligas/eliminar/' + ${liga.id} + '\');'" class="btn-danger-tech"><i class="fas fa-trash-alt"></i></button>
+                        <i class="fas fa-chevron-down text-2xl theme-muted transition-transform duration-300 liga-toggle-icon ml-2"></i>
+                    </div>
+                </div>
+
+                <div class="liga-body hidden mt-6">
+                    <div class="flex justify-end mb-4 px-2">
+                        <a th:href="@{'/categorias/nueva/' + ${liga.id}}" class="text-[10px] font-black uppercase tracking-widest hover:scale-105 transition px-3 py-1 rounded-lg border" style="color: var(--text-main); background: var(--border-highlight); border-color: var(--border-color);"><i class="fas fa-plus"></i> Nueva División</a>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div th:each="categoria : ${liga.categorias}" class="cat-card group">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h3 class="font-900 text-sm uppercase theme-text" th:text="${categoria.nombre}">CATEGORIA</h3>
+                                    <span class="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md mt-1 inline-block"
+                                          th:classappend="'gen-' + ${categoria.genero}"
+                                          th:text="${categoria.genero}">GENERO</span>
+                                </div>
+                                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <a th:href="@{'/categorias/editar/' + ${categoria.id}}" class="theme-muted hover:text-white transition p-1"><i class="fas fa-edit"></i></a>
+                                    <button th:onclick="'openDeleteModal(\'/categorias/eliminar/' + ${categoria.id} + '\');'" class="text-red-400 hover:text-red-500 transition p-1 cursor-pointer bg-transparent border-none"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </div>
+                            <p class="text-xs font-medium theme-muted mt-auto pt-3 border-t theme-border" th:text="${categoria.descripcion ?: 'Sin detalles técnicos.'}"></p>
+                        </div>
+                        <div th:if="${#lists.isEmpty(liga.categorias)}" class="col-span-full text-center py-4 rounded-xl border-2 border-dashed theme-border" style="background: var(--card-bg-hover);">
+                            <span class="text-[9px] font-bold theme-muted uppercase">No hay divisiones configuradas</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="deleteModal" class="fixed inset-0 z-[500] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity">
+        <div class="theme-card rounded-3xl p-8 w-full mx-4 shadow-2xl transform scale-95 transition-transform" id="deleteModalContent" style="max-width: 450px; padding: 50px;">
+            <div class="text-center">
+                <div class="w-20 h-20 mx-auto bg-red-900/30 rounded-full flex items-center justify-center mb-6"><i class="fas fa-exclamation-triangle text-4xl text-red-500"></i></div>
+                <h3 class="text-2xl font-black uppercase theme-text mb-3">¿Estás seguro?</h3>
+                <p class="theme-muted font-medium mb-10 text-sm">Esta acción es irreversible.</p>
+                <div class="flex gap-4 justify-center">
+                    <button onclick="closeDeleteModal()" class="w-full py-4 rounded-xl font-bold uppercase theme-muted theme-btn text-xs">Cancelar</button>
+                    <a id="confirmDeleteBtn" href="#" class="w-full py-4 rounded-xl font-bold uppercase text-white bg-red-600 hover:bg-red-700 shadow-lg text-xs flex items-center justify-center transition">Eliminar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="theme-switcher-btn" onclick="toggleThemePanel()"><i class="fas fa-palette"></i></button>
+    <div class="theme-panel" id="themePanel">
+        <h4 class="text-sm font-black uppercase text-center mb-4 theme-text border-b pb-2 theme-border">Elige tu estilo</h4>
+        <div id="themeOptions"></div>
+    </div>
+
+    <script>
+        if (typeof globalThemes !== 'undefined') {
+            const themePanelOptions = document.getElementById('themeOptions');
+            for (const [key, data] of Object.entries(globalThemes)) {
+                const btn = document.createElement('div');
+                btn.className = 'theme-option';
+                btn.style.backgroundColor = data.colors.border || data.colors.highlight;
+                btn.innerHTML = `<span class="w-4 h-4 rounded-full bg-white opacity-50"></span> ${data.name}`;
+                btn.onclick = () => { applyThemeGlobal(key); localStorage.setItem('ctt_admin_theme', key); toggleThemePanel(); };
+                themePanelOptions.appendChild(btn);
+            }
+        }
+        function toggleThemePanel() { document.getElementById('themePanel').classList.toggle('active'); }
+
+        // ACORDEÓN LIGAS (Cerrado por defecto -> Rota 180 al abrir)
+        function toggleLigaCollapse(header) {
+            const body = header.nextElementSibling;
+            const icon = header.querySelector('.liga-toggle-icon');
+            if(body.classList.contains('hidden')) {
+                body.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                body.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // MODAL ELIMINAR
+        function openDeleteModal(url) { 
+            document.getElementById('confirmDeleteBtn').href = url; 
+            const modal = document.getElementById('deleteModal'); 
+            modal.classList.remove('hidden'); 
+            setTimeout(() => document.getElementById('deleteModalContent').classList.replace('scale-95', 'scale-100'), 10); 
+        }
+        function closeDeleteModal() { 
+            document.getElementById('deleteModalContent').classList.replace('scale-100', 'scale-95'); 
+            setTimeout(() => document.getElementById('deleteModal').classList.add('hidden'), 300); 
+        }
+    </script>
+</body>
+</html>

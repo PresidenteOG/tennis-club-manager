@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscripción Técnica - Almendral TC</title>
+    <script src="/vendor/tailwind.js"></script>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    <style>
+        :root { --bg-grad-1: #1f2937; --bg-grad-2: #0f172a; --card-bg: #1e293b; --card-bg-hover: #0f172a; --border-color: #334155; --border-highlight: #475569; --text-main: #f1f5f9; --text-muted: #94a3b8; --btn-bg: #334155; --btn-hover: #475569; }
+        body { font-family: 'Montserrat', sans-serif; background: radial-gradient(circle at center, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%); color: var(--text-main); min-height: 100vh; overflow-y: scroll; margin: 0; display: flex; transition: background 0.5s ease;}
+        
+        body.admin-layout .main-content { margin-left: 280px; width: calc(100% - 280px); }
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; min-height: 100vh; }
+        
+        .theme-card { background: var(--card-bg); border-radius: 30px; padding: 50px; border: 4px solid var(--border-color); box-shadow: 0 20px 50px rgba(0,0,0,0.6); transition: 0.3s; width: 100%; max-width: 600px;}
+        .theme-input { width: 100%; background: var(--card-bg-hover); border: 2px solid var(--border-color); color: var(--text-main); padding: 15px 20px; border-radius: 12px; font-weight: 700; transition: 0.3s; outline: none; }
+        .theme-input:focus { border-color: var(--border-highlight); }
+        .theme-btn { background: var(--btn-bg); color: var(--text-main); transition: 0.3s; cursor: pointer; border: 1px solid var(--border-color); }
+        .theme-btn:hover { background: var(--border-highlight); border-color: var(--border-highlight); }
+
+        /* Estilos del Dropdown Buscador */
+        .dropdown-container { position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 2px solid var(--border-highlight); border-radius: 12px; margin-top: 5px; z-index: 50; max-height: 250px; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none; }
+        .dropdown-item { padding: 12px 20px; font-weight: 600; color: var(--text-main); cursor: pointer; border-bottom: 1px solid var(--border-color); transition: 0.2s; }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background: var(--border-highlight); }
+        .no-results { padding: 12px 20px; font-weight: 600; color: var(--text-muted); text-align: center; font-style: italic; }
+
+        .theme-switcher-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--card-bg); border: 3px solid var(--border-highlight); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 999; transition: 0.3s; }
+        .theme-switcher-btn:hover { transform: rotate(45deg) scale(1.1); }
+        .theme-panel { position: fixed; bottom: 100px; right: 30px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 20px; padding: 20px; width: 250px; box-shadow: 0 15px 40px rgba(0,0,0,0.8); z-index: 998; display: none; opacity: 0; transition: 0.3s; }
+        .theme-panel.active { display: block; opacity: 1; }
+        .theme-option { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 10px; transition: 0.2s; color: white; }
+
+        @media (max-width: 768px) { body.admin-layout .main-content { margin-left: 70px; width: calc(100% - 70px); } }
+    </style>
+</head>
+<body class="admin-layout">
+    
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <div class="theme-card">
+            <span class="text-[9px] font-black uppercase tracking-[5px]" style="color: var(--border-highlight);">Inscripción en Vivo</span>
+            <h1 class="text-3xl font-900 uppercase tracking-tighter mb-10 theme-text" th:text="${categoria.nombre}">CATEGORÍA</h1>
+
+            <form th:action="@{/equipos/guardar-inscripcion}" method="post" id="enrollForm">
+                <input type="hidden" name="categoriaId" th:value="${categoria.id}" />
+                <input type="hidden" name="usuarioId" id="usuarioIdInput" required>
+
+                <label class="block text-[10px] font-black uppercase mb-2 tracking-widest ml-1 theme-muted">Buscar Jugador del Draft</label>
+                
+                <div class="relative w-full mb-8">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-[18px] theme-muted"></i>
+                        <input type="text" id="searchInput" class="theme-input pl-12" placeholder="Ej: Marc, Anna, López..." autocomplete="off">
+                        <i class="fas fa-times absolute right-4 top-[18px] theme-muted cursor-pointer hidden hover:text-red-500 transition" id="clearSearch"></i>
+                    </div>
+                    
+                    <div class="dropdown-container" id="dropdownList">
+                        <div th:each="jugador : ${jugadoresDisponibles}" 
+                             class="dropdown-item"
+                             th:attr="data-id=${jugador.id}, data-name=${jugador.nombre + ' ' + jugador.primerApellido + ' (' + jugador.edad + ' años)'}">
+                             <i class="fas fa-user mr-2 theme-muted"></i>
+                             <span th:text="${jugador.nombre + ' ' + jugador.primerApellido + ' (' + jugador.edad + ' años)'}"></span>
+                        </div>
+                        <div class="no-results hidden" id="noResultsMsg">No se encontraron jugadores disponibles.</div>
+                    </div>
+                </div>
+
+                <div class="mt-10 flex justify-between items-center border-t pt-6" style="border-color: var(--border-color);">
+                    <a href="/equipos" class="text-xs font-bold uppercase transition hover:text-white theme-muted"><i class="fas fa-arrow-left"></i> Cancelar</a>
+                    <button type="button" onclick="validarYEnviar()" class="theme-btn px-8 py-3 rounded-xl font-black uppercase text-xs shadow-lg hover:scale-105">
+                        <i class="fas fa-check mr-2"></i> Confirmar Alta
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <button class="theme-switcher-btn" onclick="toggleThemePanel()"><i class="fas fa-palette"></i></button>
+    <div class="theme-panel" id="themePanel">
+        <h4 class="text-sm font-black uppercase text-center mb-4 theme-text border-b pb-2 theme-border">Elige tu estilo</h4>
+        <div id="themeOptions"></div>
+    </div>
+
+    <script>
+        // Themes
+        if (typeof globalThemes !== 'undefined') {
+            const themePanelOptions = document.getElementById('themeOptions');
+            for (const [key, data] of Object.entries(globalThemes)) {
+                const btn = document.createElement('div');
+                btn.className = 'theme-option';
+                btn.style.backgroundColor = data.colors.border || data.colors.highlight;
+                btn.innerHTML = `<span class="w-4 h-4 rounded-full bg-white opacity-50"></span> ${data.name}`;
+                btn.onclick = () => { applyThemeGlobal(key); localStorage.setItem('ctt_admin_theme', key); toggleThemePanel(); };
+                themePanelOptions.appendChild(btn);
+            }
+        }
+        function toggleThemePanel() { document.getElementById('themePanel').classList.toggle('active'); }
+
+        // ==========================================
+        // LÓGICA DEL BUSCADOR PREDICTIVO EN VIVO
+        // ==========================================
+        const searchInput = document.getElementById('searchInput');
+        const hiddenInput = document.getElementById('usuarioIdInput');
+        const dropdownList = document.getElementById('dropdownList');
+        const items = document.querySelectorAll('.dropdown-item');
+        const noResultsMsg = document.getElementById('noResultsMsg');
+        const clearSearch = document.getElementById('clearSearch');
+
+        // Mostrar lista al hacer click
+        searchInput.addEventListener('focus', () => {
+            dropdownList.style.display = 'block';
+            filterList();
+        });
+
+        // Filtrar mientras se escribe
+        searchInput.addEventListener('input', () => {
+            filterList();
+            hiddenInput.value = ''; // Resetea ID si cambia el texto
+            clearSearch.style.display = searchInput.value.length > 0 ? 'block' : 'none';
+        });
+
+        function filterList() {
+            const filter = searchInput.value.toLowerCase();
+            let hasVisible = false;
+
+            items.forEach(item => {
+                const text = item.getAttribute('data-name').toLowerCase();
+                if (text.includes(filter)) {
+                    item.style.display = 'block';
+                    hasVisible = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            noResultsMsg.style.display = hasVisible ? 'none' : 'block';
+        }
+
+        // Seleccionar jugador
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                searchInput.value = item.getAttribute('data-name');
+                hiddenInput.value = item.getAttribute('data-id');
+                dropdownList.style.display = 'none';
+                clearSearch.style.display = 'block';
+            });
+        });
+
+        // Limpiar búsqueda
+        clearSearch.addEventListener('click', () => {
+            searchInput.value = '';
+            hiddenInput.value = '';
+            clearSearch.style.display = 'none';
+            filterList();
+            searchInput.focus();
+        });
+
+        // Cerrar dropdown si se hace click fuera
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !dropdownList.contains(e.target)) {
+                dropdownList.style.display = 'none';
+            }
+        });
+
+        // Validación final antes de enviar
+        function validarYEnviar() {
+            if(!hiddenInput.value) {
+                alert("Debes seleccionar un jugador del menú desplegable haciendo clic en su nombre.");
+                searchInput.focus();
+                return;
+            }
+            document.getElementById('enrollForm').submit();
+        }
+    </script>
+</body>
+</html>

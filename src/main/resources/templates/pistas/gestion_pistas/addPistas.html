@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Añadir Nueva Pista</title>
+        <link href="/vendor/bootstrap.min.css" rel="stylesheet">
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                background: linear-gradient(135deg, #007bff, #00c6ff);
+                color: #343a40;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+
+            .container {
+                max-width: 600px;
+                width: 100%;
+                background-color: white;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            }
+
+            h1 {
+                text-align: center;
+                margin-bottom: 30px;
+                color: #007bff;
+                font-size: 2.5em;
+                font-weight: bold;
+            }
+
+            .form-label {
+                font-size: 1.1em;
+                font-weight: 600;
+                color: #495057;
+            }
+
+            .form-control {
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                font-size: 1.1em;
+            }
+
+            .btn-primary {
+                background-color: #28a745;
+                border-color: #28a745;
+                width: 100%;
+                padding: 14px;
+                font-size: 1.1em;
+                border-radius: 8px;
+            }
+
+            .btn-primary:hover {
+                background-color: #218838;
+                border-color: #1e7e34;
+            }
+
+            .btn-outline-secondary {
+                width: 100%;
+                padding: 12px;
+                text-align: center;
+                font-size: 1.1em;
+                border-radius: 8px;
+                border-color: #ccc;
+            }
+
+            .btn-outline-secondary:hover {
+                background-color: #f8f9fa;
+                color: #007bff;
+            }
+
+            .container {
+                animation: fadeIn 1s ease-out;
+            }
+
+            @keyframes fadeIn {
+                0% {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
+                100% {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Añadir Nueva Pista</h1>
+
+            <!-- Mensaje de error (si aplica) -->
+            <div th:if="${error}" class="alert alert-danger" role="alert">
+                <p th:text="${error}"></p>
+            </div>
+
+            <!-- Formulario -->
+            <form action="/adminpistas/addPista" method="post" th:action="@{/addPista}" novalidate>
+                <!-- Token CSRF -->
+                <input type="hidden" />
+
+                <!-- Resto del formulario -->
+                <div class="mb-3">
+                    <label for="nombrePista" class="form-label">Nombre de la Pista:</label>
+                    <input type="text" class="form-control" id="nombrePista" name="nombrePista" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="disponible" class="form-label">¿Disponible?</label>
+                    <input type="checkbox" id="disponible" name="disponible" class="form-check-input">
+                    <label for="disponible" class="form-check-label">Disponible</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Guardar Pista</button>
+            </form>
+
+
+            <a href="/adminpistas" class="btn btn-outline-secondary mt-3">Volver a la lista de pistas</a>
+        </div>
+
+        <script src="/vendor/bootstrap.min.css"></script>
+        <script>
+            (function () {
+                'use strict';
+                const forms = document.getElementsByClassName('needs-validation');
+                Array.prototype.filter.call(forms, function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            })();
+        </script>
+    </body>
+</html>

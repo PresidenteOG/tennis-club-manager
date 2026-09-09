@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Principal - Club de Tenis Almendral</title>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <script src="/vendor/tailwind.js"></script>
+    <style>
+        :root {
+            --atc-verde: #1a4731;
+            --atc-verde-claro: #2d5a27;
+            --atc-arcilla: #cc5233;
+            --atc-arcilla-hover: #a33f27;
+            --atc-rojo-logout: #dc2626;
+
+            /* Colores por sección */
+            --color-calendario: #3b82f6;
+            /* Azul */
+            --color-jugadores: #10b981;
+            /* Esmeralda */
+            --color-staff: #6366f1;
+            /* Índigo */
+            --color-equipos: #f59e0b;
+            /* Ámbar/Oro */
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--atc-verde);
+            background-image: radial-gradient(var(--atc-verde-claro) 1px, transparent 1px);
+            background-size: 30px 30px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .premium-container {
+            display: flex;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            max-width: 1100px;
+            width: 100%;
+            min-height: 650px;
+            animation: fadeInScale 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .sidebar-visual {
+            flex: 1.1;
+            background-image: linear-gradient(135deg, #0c2b1d 0%, #1a4731 55%, #2d5a27 100%);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .sidebar-visual {
+                display: block;
+            }
+        }
+
+        .sidebar-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(26, 71, 49, 0.2), rgba(204, 82, 51, 0.5));
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 50px;
+            color: white;
+        }
+
+        .menu-content {
+            flex: 1;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-card {
+            background: #f8faf9;
+            border: 2px solid #edf2f0;
+            border-radius: 25px;
+            padding: 20px 25px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+        }
+
+        .icon-circle {
+            width: 45px;
+            height: 45px;
+            background: var(--atc-verde);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        /* --- LOGICA DE COLORES INDIVIDUALES --- */
+
+        /* Calendario - Azul */
+        .hover-calendario:hover {
+            border-color: var(--color-calendario);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
+            transform: translateX(10px);
+        }
+
+        .hover-calendario:hover .icon-circle {
+            background-color: var(--color-calendario);
+        }
+
+        /* Jugadores - Verde */
+        .hover-jugadores:hover {
+            border-color: var(--color-jugadores);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.1);
+            transform: translateX(10px);
+        }
+
+        .hover-jugadores:hover .icon-circle {
+            background-color: var(--color-jugadores);
+        }
+
+        /* Staff - Índigo */
+        .hover-staff:hover {
+            border-color: var(--color-staff);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.1);
+            transform: translateX(10px);
+        }
+
+        .hover-staff:hover .icon-circle {
+            background-color: var(--color-staff);
+        }
+
+        /* Equipos - Oro */
+        .hover-equipos:hover {
+            border-color: var(--color-equipos);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.1);
+            transform: translateX(10px);
+        }
+
+        .hover-equipos:hover .icon-circle {
+            background-color: var(--color-equipos);
+        }
+
+        /* --- FIN LOGICA COLORES --- */
+
+        .admin-link {
+            background-color: var(--atc-arcilla);
+            color: white;
+            padding: 18px;
+            border-radius: 25px;
+            text-align: center;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(204, 82, 51, 0.3);
+            font-size: 0.9rem;
+        }
+
+        .admin-link:hover {
+            background-color: var(--atc-arcilla-hover);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(204, 82, 51, 0.4);
+        }
+
+        .logout-link {
+            color: var(--atc-rojo-logout);
+            transition: all 0.3s ease;
+        }
+
+        .logout-link:hover {
+            color: #991b1b;
+            transform: translateX(5px);
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="premium-container">
+        <div class="sidebar-visual">
+            <div class="sidebar-overlay">
+                <p class="text-xs font-bold uppercase tracking-[0.4em] mb-3 text-orange-200">Elegancia & Rendimiento</p>
+                <h2 class="text-5xl font-900 leading-none uppercase mb-4 drop-shadow-lg">Tu Espacio,<br>Tu Juego.</h2>
+                <p class="text-sm font-medium opacity-95 max-w-xs leading-relaxed text-gray-100">
+                    Accede a los servicios exclusivos del Club de Tenis Almendral.
+                </p>
+            </div>
+        </div>
+
+        <div class="menu-content">
+            <div class="flex items-center justify-between mb-10">
+                <div>
+                    <h1 class="text-2xl font-900 text-[#1a4731] uppercase tracking-tighter">Bienvenido</h1>
+                    <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Socio del club</p>
+                </div>
+                <img th:src="@{/layout/logo.svg}" alt="Logo del club" class="w-14 h-14 object-contain opacity-80">
+            </div>
+
+            <div class="space-y-3 mb-8">
+                <a href="/calendario" class="nav-card hover-calendario group">
+                    <div class="icon-circle">📅</div>
+                    <div>
+                        <b>
+                            <h3 class="font-800 text-sm uppercase text-[#1a4731]">Calendario</h3>
+                        </b>
+                        <p class="text-xs text-gray-500">Eventos y reserva de pistas</p>
+                    </div>
+                </a>
+
+                <a href="/equipos" class="nav-card hover-equipos group">
+                    <div class="icon-circle">🏆</div>
+                    <div>
+                        <b>
+                            <h3 class="font-800 text-sm uppercase text-[#1a4731]">Equipos</h3>
+                        </b>
+                        <p class="text-xs text-gray-500">Ligas y competiciones</p>
+                    </div>
+                </a>
+
+                <a href="/perfil"
+                    class="nav-card hover-jugadores group">
+                    <div class="icon-circle">👤</div>
+                    <div>
+                        <h3 class="font-800 text-sm uppercase text-[#1a4731]">Mi Perfil</h3>
+                        <p class="text-xs text-gray-500">Ajusta tus datos y preferencias</p>
+                    </div>
+                </a>
+            </div>
+
+            <div th:if="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')}" class="mt-auto mb-6">
+                <a href="/menu_admin" class="admin-link block flex items-center justify-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Área de Administración
+                </a>
+            </div>
+
+            <div class="pt-4 border-t border-gray-50 flex justify-between items-center">
+                <p class="text-[9px] text-gray-300 font-bold uppercase tracking-widest">© 2026 Almendral TC</p>
+                <a href="/logout" onclick="return confirm('¿Seguro que quieres cerrar sesión?');"
+                    class="logout-link flex items-center gap-2 text-xs font-bold uppercase tracking-tighter">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Cerrar Sesión
+                </a>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Editar Pista</title>
+        <style>
+            /* Estilos generales */
+            body {
+                margin: 0;
+                font-family: 'Arial', sans-serif;
+                background: linear-gradient(135deg, #007bff, #00c6ff);
+                color: #ffffff;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 480px;
+                background-color: #ffffff;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            h1 {
+                text-align: center;
+                color: #007bff;
+                margin-bottom: 20px;
+                font-size: 2em;
+                font-weight: 600;
+            }
+
+            label {
+                font-size: 1em;
+                font-weight: bold;
+                color: #007bff;
+                margin-top: 10px;
+                display: block;
+            }
+
+            input, select {
+                width: 100%;
+                padding: 10px;
+                margin-top: 8px;
+                border-radius: 4px;
+                border: 1px solid #007bff;
+                font-size: 1em;
+                background-color: #f8f9fa;
+                box-sizing: border-box;
+            }
+
+            input:focus, select:focus {
+                outline: none;
+                border-color: #00c6ff;
+                background-color: #e9ecef;
+            }
+
+            button {
+                width: 100%;
+                padding: 12px;
+                margin-top: 20px;
+                border-radius: 4px;
+                border: none;
+                background-color: #28a745;
+                color: white;
+                font-weight: bold;
+                font-size: 1em;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+
+            button:hover {
+                background-color: #218838;
+            }
+
+            .btn-back {
+                display: block;
+                text-align: center;
+                padding: 12px;
+                margin-top: 10px;
+                border-radius: 4px;
+                background-color: #17a2b8;
+                color: white;
+                font-weight: bold;
+                text-decoration: none;
+                font-size: 1em;
+                transition: background-color 0.3s ease;
+            }
+
+            .btn-back:hover {
+                background-color: #138496;
+            }
+        </style>
+    </head>
+    <body>
+
+        <div class="container">
+            <h1>Editar Pista</h1>
+
+            <!-- Formulario de edición -->
+            <form th:action="@{/adminpistas/editpista/{id}(id=${pista.id})}" th:object="${pista}" method="post">
+
+                <!-- Campo Nombre de la Pista -->
+                <label for="nombrePista">Nombre de la Pista</label>
+                <input type="text" id="nombrePista" name="nombrePista" class="form-control" th:value="*{nombrePista}" placeholder="Introduce el nombre de la pista" required>
+
+                <!-- Campo Estado -->
+                <label for="disponible">Estado</label>
+                <select id="disponible" name="disponible" class="form-select" th:value="*{disponible}" required>
+                    <option th:value="true" th:selected="*{disponible} == true">Disponible</option>
+                    <option th:value="false" th:selected="*{disponible} == false">No Disponible</option>
+                </select>
+
+                <!-- Botón para guardar cambios -->
+                <button type="submit">Guardar Cambios</button>
+            </form>
+
+            <!-- Botón para volver al menú -->
+            <a href="/adminpistas" class="btn-back">Volver a pistas</a>
+        </div>
+
+    </body>
+</html>

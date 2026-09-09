@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar - Almendral TC</title>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <script src="/vendor/tailwind.js"></script>
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    <style>
+        :root { --bg-grad-1: #1f2937; --bg-grad-2: #0f172a; --card-bg: #1e293b; --border-color: #334155; --border-highlight: #475569; --text-main: #f1f5f9; --text-muted: #94a3b8; --btn-bg: #334155; --btn-hover: #475569; }
+        body { font-family: 'Montserrat', sans-serif; background: radial-gradient(circle at center, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%); color: var(--text-main); min-height: 100vh; overflow-y: scroll; margin: 0; display: flex; transition: background 0.5s ease;}
+        body.admin-layout .main-content { margin-left: 280px; width: calc(100% - 280px); }
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        
+        .theme-card { background: var(--card-bg); border: 4px solid var(--border-color); border-radius: 30px; padding: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); width: 100%; max-width: 900px; transition: all 0.3s ease;}
+        .theme-input { width: 100%; background: var(--bg-grad-2); border: 2px solid var(--border-color); color: var(--text-main); padding: 15px 20px; border-radius: 15px; outline: none; transition: 0.3s; }
+        .theme-input:focus { border-color: var(--border-highlight); }
+        .theme-btn { background: var(--btn-bg); color: var(--text-main); border: none; padding: 15px 30px; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .theme-btn:hover { background: var(--border-highlight); transform: translateY(-2px); }
+        .section-tag { font-size: 9px; font-weight: 900; color: var(--text-muted); text-transform: uppercase; letter-spacing: 4px; border-bottom: 2px solid var(--border-color); margin-bottom: 20px; grid-column: span 2; padding-bottom: 5px;}
+        .role-card { background: var(--bg-grad-2); border: 2px solid var(--border-color); border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.3s;}
+        .role-card:hover { border-color: var(--border-highlight); }
+    </style>
+</head>
+<body class="admin-layout">
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <header class="text-center w-full mb-10">
+            <h1 class="theme-card px-12 py-3 rounded-full font-black text-2xl uppercase inline-block border-4 shadow-xl tracking-wider mb-6" style="padding: 15px 40px; border-radius: 50px;">
+                <i class="fas fa-user-edit mr-2"></i> Editar Ficha
+            </h1>
+        </header>
+
+        <main class="theme-card">
+            <a th:href="@{'/' + ${origen != null ? origen : 'usuarios'}}" class="font-bold text-sm mb-6 inline-block" style="color: var(--text-muted)"><i class="fas fa-arrow-left"></i> Volver a Lista</a>
+
+            <div th:if="${errorDni}" class="bg-red-900/50 border-2 border-red-500 text-red-200 p-4 rounded-xl mb-6 font-bold uppercase text-xs" th:text="${errorDni}"></div>
+
+            <form th:action="@{'/usuarios/actualizar/' + ${usuario.id}}" th:object="${usuario}" method="post" enctype="multipart/form-data">
+                <input type="hidden" th:field="*{id}" />
+                <input type="hidden" name="origen" th:value="${origen}" />
+
+                <div class="flex flex-col md:flex-row items-center gap-6 p-6 rounded-3xl border-2 border-dashed mb-8" style="background: var(--bg-grad-2); border-color: var(--border-color);">
+                    <div class="relative group cursor-pointer" onclick="openImagePreview(this.querySelector('img').src)">
+                        <img id="preview" th:src="${usuario.avatar != null && !usuario.avatar.isEmpty()} ? @{/images/{path}(path=${usuario.avatar})} : @{/vendor/default-avatar.svg} + ${usuario.nombre} + '&background=1a1a1a&color=fff'" class="w-32 h-32 rounded-full object-cover shadow-md border-4" style="border-color: var(--border-highlight);">
+                    </div>
+                    <div class="flex-1 space-y-3 w-full">
+                        <label class="block w-full text-center text-[10px] font-black uppercase py-3 rounded-xl cursor-pointer transition theme-btn">
+                            <i class="fas fa-upload mr-1"></i> Cambiar Foto
+                            <input type="file" name="imagen" id="file-input" accept="image/*" class="hidden">
+                        </label>
+                        <a th:if="${usuario.avatar != null && !usuario.avatar.isEmpty()}" 
+                           href="javascript:void(0)" 
+                           th:attr="onclick=|openDeleteModal('/usuarios/eliminar-avatar/${usuario.id}?from=${origen}')|"
+                           class="block w-full text-center bg-red-900/30 hover:bg-red-600 text-red-400 hover:text-white border border-red-800 text-[10px] font-black uppercase py-3 rounded-xl transition">
+                            <i class="fas fa-trash-alt mr-1"></i> Eliminar Foto
+                        </a>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                    <div class="section-tag">Identidad y Acceso</div>
+                    <div><label class="text-[10px] font-black uppercase ml-1 mb-1 block" style="color: var(--text-muted)">Username</label><input type="text" th:field="*{nombreUsuario}" class="theme-input" required></div>
+                    <div><label class="text-[10px] font-black uppercase ml-1 mb-1 block" style="color: var(--text-muted)">Contraseña (opcional)</label><input type="password" th:field="*{password}" class="theme-input" placeholder="••••••••"></div>
+                    <div><label class="text-[10px] font-black uppercase ml-1 mb-1 block" style="color: var(--text-muted)">Nombre</label><input type="text" th:field="*{nombre}" class="theme-input" required></div>
+                    <div><label class="text-[10px] font-black uppercase ml-1 mb-1 block" style="color: var(--text-muted)">Apellidos</label><input type="text" th:field="*{primerApellido}" class="theme-input" required></div>
+                    <div><label class="text-[10px] font-black uppercase ml-1 mb-1 block" style="color: var(--text-muted)">DNI</label><input type="text" th:field="*{dni}" class="theme-input" required></div>
+                    
+                    <div><label class="text-[10px] font-black uppercase ml-1 mb-1 block" style="color: var(--text-muted)">Nacimiento</label>
+                        <input type="date" name="fechaNacimiento" th:value="${usuario.fechaNacimiento}" class="theme-input">
+                    </div>
+
+                    <div><label class="text-[10px] font-black uppercase ml-1 mb-1 block" style="color: var(--text-muted)">Email</label><input type="email" th:field="*{email}" class="theme-input" required></div>
+                    
+                    <div>
+                        <label class="text-[10px] font-black uppercase ml-1 mb-1 block" style="color: var(--text-muted)">Género</label>
+                        <select th:field="*{genero}" class="theme-input cursor-pointer" required>
+                            <option value="" disabled selected>Seleccione género...</option>
+                            <option value="MASCULINO">Masculino</option>
+                            <option value="FEMENINO">Femenino</option>
+                            <option value="MIXTO">Mixto/Unisex</option>
+                        </select>
+                    </div>
+
+                    <div class="section-tag mt-4">Privilegios y Roles</div>
+                    <div class="md:col-span-2 mb-2">
+                        <label class="role-card" style="border-color: #f59e0b; background: rgba(245, 158, 11, 0.1);">
+                            <input type="checkbox" th:field="*{capitan}" class="w-4 h-4 accent-amber-500 cursor-pointer">
+                            <span class="text-[11px] font-black uppercase text-amber-500"><i class="fas fa-star mr-1"></i> Es Capitán de Equipo</span>
+                        </label>
+                    </div>
+
+                    <div class="md:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <label th:each="rol : ${rolesDisponibles}" class="role-card hover:border-slate-400">
+                            <input type="checkbox" th:field="*{roles}" th:value="${rol.id}" class="w-4 h-4 accent-purple-500 cursor-pointer">
+                            <span class="text-[11px] font-bold uppercase" style="color: var(--text-main)" th:text="${rol.nombreRol.replace('ROLE_', '')}"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mt-12 flex justify-between items-center pt-8" style="border-top: 2px solid var(--border-color);">
+                    <a th:href="@{'/' + ${origen != null ? origen : 'usuarios'}}" class="font-bold uppercase text-xs hover:text-white" style="color: var(--text-muted)">Cancelar</a>
+                    <button type="submit" class="theme-btn shadow-lg px-10 py-4"><i class="fas fa-sync-alt mr-2"></i> Sincronizar</button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <div id="imagePreviewModal" class="fixed inset-0 z-[300] hidden flex items-center justify-center bg-black/90 backdrop-blur-sm" onclick="closeImagePreview()"><img id="modalPreviewImg" class="max-w-[90%] max-h-[90%] rounded-2xl border-4 theme-border shadow-2xl object-cover transform scale-95 transition-transform duration-300"></div>
+    
+    <div id="deleteModal" class="fixed inset-0 z-[500] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity">
+        <div class="theme-card transform scale-95 transition-transform" id="deleteModalContent" style="max-width: 400px;">
+            <div class="text-center">
+                <div class="w-20 h-20 mx-auto bg-red-900/30 rounded-full flex items-center justify-center mb-6"><i class="fas fa-exclamation-triangle text-4xl text-red-500"></i></div>
+                <h3 class="text-2xl font-black uppercase theme-text mb-3">¿Borrar foto?</h3>
+                <div class="flex gap-4 justify-center mt-6">
+                    <button onclick="closeDeleteModal()" class="w-full py-3 rounded-xl font-bold uppercase theme-muted theme-btn text-xs">Cancelar</button>
+                    <a id="confirmDeleteBtn" href="#" class="w-full py-3 rounded-xl font-bold uppercase text-white bg-red-600 hover:bg-red-700 shadow-lg text-xs flex items-center justify-center">Sí, Eliminar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('file-input').onchange = function (evt) { const [file] = this.files; if (file) { document.getElementById('preview').src = URL.createObjectURL(file); } }
+        function openImagePreview(src) { document.getElementById('modalPreviewImg').src = src; document.getElementById('imagePreviewModal').classList.remove('hidden'); setTimeout(() => document.getElementById('modalPreviewImg').classList.replace('scale-95', 'scale-100'), 10); }
+        function closeImagePreview() { document.getElementById('modalPreviewImg').classList.replace('scale-100', 'scale-95'); setTimeout(() => document.getElementById('imagePreviewModal').classList.add('hidden'), 300); }
+        function openDeleteModal(url) { document.getElementById('confirmDeleteBtn').href = url; const modal = document.getElementById('deleteModal'); modal.classList.remove('hidden'); setTimeout(() => document.getElementById('deleteModalContent').classList.replace('scale-95', 'scale-100'), 10); }
+        function closeDeleteModal() { document.getElementById('deleteModalContent').classList.replace('scale-100', 'scale-95'); setTimeout(() => document.getElementById('deleteModal').classList.add('hidden'), 300); }
+    </script>
+</body>
+</html>

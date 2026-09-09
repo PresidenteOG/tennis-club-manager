@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Nueva Convocatoria - Almendral TC</title>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <script src="/vendor/tailwind.js"></script>
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    <style>
+        :root { --bg-grad-1: #1f2937; --bg-grad-2: #0f172a; --card-bg: #1e293b; --card-bg-hover: #0f172a; --border-color: #334155; --border-highlight: #475569; --text-main: #f1f5f9; --text-muted: #94a3b8; --btn-bg: #334155; --btn-hover: #475569; }
+        body { font-family: 'Montserrat', sans-serif; background: radial-gradient(circle at center, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%); color: var(--text-main); min-height: 100vh; overflow-y: scroll; margin: 0; display: flex; transition: background 0.5s ease;}
+        body.admin-layout .main-content { margin-left: 280px; width: calc(100% - 280px); }
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        
+        .form-container { max-width: 1400px; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .theme-card { background: var(--card-bg); border-radius: 30px; padding: 35px; border: 4px solid var(--border-color); box-shadow: 0 20px 50px rgba(0,0,0,0.6); transition: 0.3s; }
+        
+        .theme-input { width: 100%; background: var(--card-bg-hover); border: 2px solid var(--border-color); color: var(--text-main); padding: 12px 18px; border-radius: 12px; font-weight: 500; transition: 0.3s; outline: none; font-size: 0.85rem;}
+        .theme-input:focus { border-color: var(--border-highlight); }
+        .theme-input::placeholder { color: var(--text-muted); opacity: 0.7; }
+        
+        select option { background: var(--card-bg-hover); color: var(--text-main); font-weight: bold; }
+
+        .section-title { font-size: 0.65rem; font-weight: 900; color: var(--border-highlight); text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-bottom: 15px; margin-top: 20px;}
+
+        /* Mockup Correo Blanco */
+        .email-preview { background: #ffffff; border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; height: 100%; min-height: 500px; border: 1px solid #e5e7eb; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);}
+        .email-header { background: #f9fafb; padding: 20px 25px; border-bottom: 1px solid #e5e7eb; }
+        .email-body { padding: 30px 25px; flex: 1; font-family: Arial, sans-serif; white-space: pre-wrap; line-height: 1.6; color: #374151; background: #ffffff; font-size: 0.95rem; overflow-y: auto;}
+        .empty-preview { display: flex; align-items: center; justify-content: center; text-align: center; color: #9ca3af; font-style: italic; font-size: 1.1rem; }
+
+        .theme-switcher-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--card-bg); border: 3px solid var(--border-highlight); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 999; transition: 0.3s; }
+        .theme-switcher-btn:hover { transform: rotate(45deg) scale(1.1); }
+        .theme-panel { position: fixed; bottom: 100px; right: 30px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 20px; padding: 20px; width: 250px; box-shadow: 0 15px 40px rgba(0,0,0,0.8); z-index: 998; display: none; opacity: 0; transition: 0.3s; }
+        .theme-panel.active { display: block; opacity: 1; }
+        .theme-option { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 10px; transition: 0.2s; color: white; }
+
+        .theme-btn { transition: 0.3s; cursor: pointer; }
+        .theme-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        @media (max-width: 1024px) { .form-container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body class="admin-layout">
+    
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div id="categoriasData" class="hidden">
+        <th:block th:if="${categorias != null}">
+            <div th:each="cat : ${categorias}" class="cat-data-row" th:data-id="${cat.id}" th:data-nombre="${cat.nombre}" th:data-liga="${cat.liga != null ? cat.liga.nombre : 'Amistoso / Sin Liga'}">
+                <th:block th:if="${cat.usuarioCategorias != null}">
+                    <div th:each="uc : ${cat.usuarioCategorias}" th:if="${uc.activo}" class="cat-player-row"
+                         th:data-nombre="${uc.usuario.nombre + ' ' + uc.usuario.primerApellido}"
+                         th:data-capitan="${uc.usuario.capitan}">
+                    </div>
+                </th:block>
+            </div>
+        </th:block>
+    </div>
+
+    <div class="main-content">
+        <header class="text-center w-full mb-10">
+            <h1 class="theme-card theme-text px-12 py-3 rounded-full font-black text-2xl uppercase inline-block border-4 shadow-xl tracking-wider" style="padding: 15px 40px; border-radius: 50px;">
+                <i class="fas fa-clipboard-list mr-2" style="color: var(--border-highlight);"></i> Generador de Convocatorias
+            </h1>
+        </header>
+
+        <div class="form-container">
+            <div class="theme-card">
+                <h3 class="text-xl font-bold mb-4 theme-text uppercase tracking-wide">Constructor de Datos</h3>
+                
+                <form id="convocatoriaForm" th:action="@{/convocatorias/guardar}" th:object="${convocatoria}" method="post">
+                    
+                    <input type="hidden" th:field="*{mensaje}" id="mensajeOculto">
+
+                    <div class="section-title">Destinatario y Asunto</div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] font-black uppercase theme-muted mb-1 ml-1 tracking-widest">Enviar a Equipo <i class="fas fa-users ml-1"></i></label>
+                            <div class="relative">
+                                <select name="idCategoriaSel" id="inputCategoria" class="theme-input cursor-pointer appearance-none">
+                                    <option value="" class="font-black">📢 Enviar a Todos los Usuarios (Aviso General)</option>
+                                    <option disabled>----------------------</option>
+                                    <option th:if="${categorias != null}" th:each="cat : ${categorias}" th:value="${cat.id}" th:text="'🎯 Equipo: ' + ${cat.nombre}"></option>
+                                </select>
+                                <i class="fas fa-chevron-down absolute right-4 top-3 theme-muted pointer-events-none"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase theme-muted mb-1 ml-1 tracking-widest">Asunto del Correo</label>
+                            <input type="text" th:field="*{asunto}" id="inputAsunto" class="theme-input" placeholder="Ej: Convocatoria Jornada 5..." required>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Datos Deportivos</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black uppercase theme-muted mb-1 ml-1 tracking-widest">Partido / Rival</label>
+                            <input type="text" id="inputPartido" class="theme-input" placeholder="Ej: Almendral TC vs Club Tenis Barcelona">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase theme-muted mb-1 ml-1 tracking-widest">Competición</label>
+                            <input type="text" id="inputCompeticion" class="theme-input" placeholder="Se autocompleta...">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase theme-muted mb-1 ml-1 tracking-widest">Capitán Asignado</label>
+                            <input type="text" id="inputCapitan" class="theme-input" placeholder="Se autocompleta...">
+                        </div>
+                    </div>
+
+                    <div class="section-title">Horarios de Convocatoria</div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-black uppercase theme-muted mb-1 ml-1 tracking-widest">Día</label>
+                            <input type="date" id="inputFecha" class="theme-input">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase theme-muted mb-1 ml-1 tracking-widest">Hora Encuentro</label>
+                            <input type="time" id="inputHoraP" class="theme-input">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase theme-muted mb-1 ml-1 tracking-widest">Llegada al Club</label>
+                            <input type="time" id="inputHoraC" class="theme-input">
+                        </div>
+                    </div>
+
+                    <div class="section-title">Anotaciones Adicionales</div>
+                    <div>
+                        <textarea id="inputExtra" class="theme-input" rows="3" placeholder="Pistas reservadas, ropa a llevar, transporte..."></textarea>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-6 border-t theme-border mt-8">
+                        <a th:href="@{/convocatorias}" class="text-xs font-bold theme-muted hover:text-white transition uppercase"><i class="fas fa-arrow-left"></i> Cancelar</a>
+                        <button type="button" onclick="openConfirmModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase px-8 py-3 rounded-xl transition shadow-lg hover:scale-105 border-none cursor-pointer">
+                            Enviar Correos <i class="fas fa-paper-plane ml-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="theme-card flex flex-col" style="background: var(--bg-grad-1);">
+                <h3 class="text-xl font-bold mb-4 theme-text uppercase tracking-wide">
+                    <i class="fas fa-eye" style="color: var(--border-highlight);"></i> Vista Previa del Email
+                </h3>
+                
+                <div class="email-preview shadow-xl">
+                    <div class="email-header">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xs font-bold text-gray-500 w-16">De:</span>
+                            <span class="text-sm font-semibold text-gray-800">Almendral TC Admin &lt;<span th:text="'admin@almendraltc.example'">admin@almendraltc.example</span>&gt;</span>
+                        </div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-xs font-bold text-gray-500 w-16">Para:</span>
+                            <span class="text-xs font-black uppercase tracking-widest bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 rounded-lg" id="previewDestino">Todos los Usuarios</span>
+                        </div>
+                        <div class="flex items-start gap-2 pt-3 border-t border-gray-200">
+                            <span class="text-xs font-bold text-gray-500 w-16 mt-1">Asunto:</span>
+                            <span class="text-lg font-black text-gray-900" id="previewAsunto">Nueva Convocatoria</span>
+                        </div>
+                    </div>
+                    <div class="email-body empty-preview" id="previewMensaje">
+                        Completa los datos del formulario para generar la estructura del correo de forma automática.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmSendModal" class="fixed inset-0 z-[500] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity">
+        <div class="theme-card transform scale-95 transition-transform w-full mx-4" id="confirmSendModalContent" style="max-width: 450px; padding: 50px; border-radius: 30px;">
+            <div class="text-center">
+                <div class="w-20 h-20 mx-auto bg-amber-900/30 rounded-full flex items-center justify-center mb-6 border-2 border-amber-500/50">
+                    <i class="fas fa-paper-plane text-4xl text-amber-500"></i>
+                </div>
+                <h3 class="text-2xl font-black uppercase theme-text mb-3">¿Confirmar Envío?</h3>
+                <p class="theme-muted font-medium mb-10 text-sm leading-relaxed">
+                    Estás a punto de enviar correos electrónicos reales a los jugadores seleccionados. 
+                    <br><br><span class="text-amber-500 font-bold uppercase text-[10px] tracking-widest">Esta acción no se puede deshacer.</span>
+                </p>
+                <div class="flex gap-4 justify-center">
+                    <button type="button" onclick="closeConfirmModal()" class="w-full py-4 rounded-xl font-bold uppercase theme-muted theme-btn text-xs">Revisar</button>
+                    <button type="button" id="realSubmitBtn" onclick="ejecutarEnvioSeguro()" class="w-full py-4 rounded-xl font-bold uppercase text-white bg-blue-600 hover:bg-blue-700 shadow-lg text-xs flex items-center justify-center transition cursor-pointer border-none">
+                        Sí, Enviar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="theme-switcher-btn" onclick="toggleThemePanel()"><i class="fas fa-palette"></i></button>
+    <div class="theme-panel" id="themePanel">
+        <h4 class="text-sm font-black uppercase text-center mb-4 theme-text border-b pb-2 theme-border">Elige tu estilo</h4>
+        <div id="themeOptions"></div>
+    </div>
+
+    <script>
+        if (typeof globalThemes !== 'undefined') {
+            const themePanelOptions = document.getElementById('themeOptions');
+            for (const [key, data] of Object.entries(globalThemes)) {
+                const btn = document.createElement('div');
+                btn.className = 'theme-option';
+                btn.style.backgroundColor = data.colors.border || data.colors.highlight;
+                btn.innerHTML = `<span class="w-4 h-4 rounded-full bg-white opacity-50"></span> ${data.name}`;
+                btn.onclick = () => { applyThemeGlobal(key); localStorage.setItem('ctt_admin_theme', key); toggleThemePanel(); };
+                themePanelOptions.appendChild(btn);
+            }
+        }
+        function toggleThemePanel() { document.getElementById('themePanel').classList.toggle('active'); }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const inputAsunto = document.getElementById('inputAsunto');
+            const inputCategoria = document.getElementById('inputCategoria');
+            const inputPartido = document.getElementById('inputPartido');
+            const inputCompeticion = document.getElementById('inputCompeticion');
+            const inputCapitan = document.getElementById('inputCapitan');
+            const inputFecha = document.getElementById('inputFecha');
+            const inputHoraP = document.getElementById('inputHoraP');
+            const inputHoraC = document.getElementById('inputHoraC');
+            const inputExtra = document.getElementById('inputExtra');
+
+            const previewAsunto = document.getElementById('previewAsunto');
+            const previewMensaje = document.getElementById('previewMensaje');
+            const mensajeOculto = document.getElementById('mensajeOculto');
+            const previewDestino = document.getElementById('previewDestino');
+
+            function procesarFecha(fechaVal) {
+                if(!fechaVal) return 'Sin confirmar';
+                const parts = fechaVal.split('-');
+                const d = new Date(parts[0], parts[1]-1, parts[2]);
+                const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                return `${dias[d.getDay()]}, ${parts.reverse().join('/')}`;
+            }
+
+            function generarMensaje() {
+                const catId = inputCategoria.value;
+                const partido = inputPartido.value || 'Por definir';
+                const competicion = inputCompeticion.value || '-';
+                const capitan = inputCapitan.value || '-';
+                const fecha = procesarFecha(inputFecha.value);
+                const horaP = inputHoraP.value || '--:--';
+                const horaC = inputHoraC.value || '--:--';
+                const extra = inputExtra.value;
+
+                let texto = `🏆 <b>CONVOCATORIA OFICIAL CLUB DE TENIS ALMENDRAL</b> 🏆\n\n`;
+                
+                texto += `📌 Encuentro: <b>${partido}</b>\n`;
+                texto += `🏅 Competición: <b>${competicion}</b>\n`;
+                texto += `👑 Capitán Responsable: <b>${capitan}</b>\n\n`;
+                
+                texto += `📅 Día del Partido: <b>${fecha}</b>\n`;
+                texto += `⏰ Hora del Encuentro: <b>${horaP} h</b>\n`;
+                texto += `📍 Llegada al Club: <b>${horaC} h</b>\n\n`;
+
+                texto += `👥 JUGADORES CONVOCADOS:\n`;
+                texto += `-------------------------------------------------\n`;
+
+                if (catId) {
+                    const catDiv = document.querySelector(`.cat-data-row[data-id="${catId}"]`);
+                    if (catDiv) {
+                        const players = catDiv.querySelectorAll('.cat-player-row');
+                        if(players.length > 0) {
+                            players.forEach(p => {
+                                const n = p.getAttribute('data-nombre');
+                                const isCap = p.getAttribute('data-capitan') === 'true';
+                                texto += `👤 ${n} ${isCap ? '<b>👑 (CAP)</b>' : ''}\n`;
+                            });
+                        } else {
+                            texto += `⚠️ No hay jugadores activos en este equipo aún.\n`;
+                        }
+                    }
+                } else {
+                    texto += `📢 AVISO GENERAL PARA TODOS LOS SOCIOS DE LA BASE DE DATOS.\n`;
+                }
+                
+                texto += `-------------------------------------------------\n`;
+
+                if(extra.trim() !== '') {
+                    texto += `\n📝 NOTAS E INSTRUCCIONES ADICIONALES:\n<b>${extra}</b>\n`;
+                }
+
+                previewMensaje.innerHTML = texto.replace(/\n/g, '<br>');
+                previewMensaje.classList.remove('empty-preview');
+
+                mensajeOculto.value = texto;
+            }
+
+            inputCategoria.addEventListener('change', function() {
+                const catId = this.value;
+                if(catId) {
+                    const catDiv = document.querySelector(`.cat-data-row[data-id="${catId}"]`);
+                    if(catDiv) {
+                        inputCompeticion.value = catDiv.getAttribute('data-liga') || 'Sin Liga';
+                        const capNode = catDiv.querySelector('.cat-player-row[data-capitan="true"]');
+                        inputCapitan.value = capNode ? capNode.getAttribute('data-nombre') : 'Sin Capitán';
+                        
+                        const text = this.options[this.selectedIndex].text.replace('🎯 Equipo: ', '');
+                        previewDestino.innerText = text;
+                        previewDestino.className = "text-xs font-black uppercase tracking-widest bg-purple-100 text-purple-800 border border-purple-200 px-2 py-0.5 rounded-lg";
+                    }
+                } else {
+                    inputCompeticion.value = '';
+                    inputCapitan.value = '';
+                    previewDestino.innerText = "Todos los Usuarios";
+                    previewDestino.className = "text-xs font-black uppercase tracking-widest bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 rounded-lg";
+                }
+                generarMensaje();
+            });
+
+            const inputs = [inputAsunto, inputPartido, inputCompeticion, inputCapitan, inputFecha, inputHoraP, inputHoraC, inputExtra];
+            inputs.forEach(inp => {
+                if(inp) inp.addEventListener('input', () => {
+                    if(inp.id === 'inputAsunto') {
+                        previewAsunto.innerText = inp.value || 'Nueva Convocatoria';
+                    }
+                    generarMensaje();
+                });
+            });
+            
+            // Función global para actualizar el campo oculto antes de enviar
+            window.prepararEnvio = function() {
+                generarMensaje();
+            }
+        });
+
+        // LOGICA DE SEGURIDAD MODAL CONFIRMACION
+        function openConfirmModal() {
+            // Validar que el formulario base cumple los required de HTML5
+            const form = document.getElementById('convocatoriaForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            const modal = document.getElementById('confirmSendModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => document.getElementById('confirmSendModalContent').classList.replace('scale-95', 'scale-100'), 10);
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmSendModalContent').classList.replace('scale-100', 'scale-95');
+            setTimeout(() => document.getElementById('confirmSendModal').classList.add('hidden'), 300);
+        }
+
+        function ejecutarEnvioSeguro() {
+            // Bloqueamos el botón y cambiamos el texto (Anti-Doble Clic)
+            const btn = document.getElementById('realSubmitBtn');
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Procesando...';
+            
+            // Actualizamos la información oculta
+            window.prepararEnvio();
+            
+            // Forzamos el envío
+            document.getElementById('convocatoriaForm').submit();
+        }
+    </script>
+</body>
+</html>

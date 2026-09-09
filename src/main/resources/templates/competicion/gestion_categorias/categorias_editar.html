@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar División - Almendral TC</title>
+    <script src="/vendor/tailwind.js"></script>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    <style>
+        :root { --bg-grad-1: #1f2937; --bg-grad-2: #0f172a; --card-bg: #1e293b; --card-bg-hover: #0f172a; --border-color: #334155; --border-highlight: #475569; --text-main: #f1f5f9; --text-muted: #94a3b8; --btn-bg: #334155; --btn-hover: #475569; }
+        body { font-family: 'Montserrat', sans-serif; background: radial-gradient(circle at center, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%); color: var(--text-main); min-height: 100vh; overflow-y: scroll; margin: 0; display: flex; transition: background 0.5s ease;}
+        
+        body.admin-layout .main-content { margin-left: 280px; width: calc(100% - 280px); }
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+        
+        .theme-card { background: var(--card-bg); border-radius: 30px; padding: 40px; border: 4px solid var(--border-color); box-shadow: 0 20px 50px rgba(0,0,0,0.6); transition: 0.3s; width: 100%; max-width: 800px;}
+        .theme-input { width: 100%; background: var(--card-bg-hover); border: 2px solid var(--border-color); color: var(--text-main); padding: 15px 20px; border-radius: 15px; font-weight: 700; transition: 0.3s; outline: none; }
+        .theme-input:focus { border-color: var(--border-highlight); }
+        .theme-btn { background: var(--btn-bg); color: var(--text-main); transition: 0.3s; cursor: pointer; border: none; }
+        .theme-btn:hover { background: var(--border-highlight); }
+
+        /* Clases para Dropdown Custom */
+        .custom-select-wrapper { position: relative; user-select: none; }
+        .custom-select-btn { width: 100%; padding: 15px 20px; border-radius: 15px; font-weight: bold; border: 2px solid var(--border-color); background: var(--card-bg-hover); color: var(--text-main); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
+        .custom-select-btn:hover { border-color: var(--border-highlight); }
+        .custom-select-menu { position: absolute; top: calc(100% + 5px); left: 0; width: 100%; background: var(--card-bg); border: 2px solid var(--border-highlight); border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; display: none; flex-direction: column; overflow: hidden; }
+        .custom-select-menu.active { display: flex; }
+        .custom-select-option { padding: 15px 20px; cursor: pointer; font-weight: bold; color: var(--text-main); border-bottom: 1px solid var(--border-color); transition: background 0.2s; }
+        .custom-select-option:last-child { border-bottom: none; }
+        .custom-select-option:hover { background-color: var(--border-highlight); }
+
+        .theme-switcher-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--card-bg); border: 3px solid var(--border-highlight); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 999; transition: 0.3s; }
+        .theme-switcher-btn:hover { transform: rotate(45deg) scale(1.1); }
+        .theme-panel { position: fixed; bottom: 100px; right: 30px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 20px; padding: 20px; width: 250px; box-shadow: 0 15px 40px rgba(0,0,0,0.8); z-index: 998; display: none; opacity: 0; transition: 0.3s; }
+        .theme-panel.active { display: block; opacity: 1; }
+        .theme-option { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 10px; transition: 0.2s; color: white; }
+
+        @media (max-width: 768px) { body.admin-layout .main-content { margin-left: 70px; width: calc(100% - 70px); } }
+    </style>
+</head>
+<body class="admin-layout">
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <header class="text-center w-full mb-10">
+            <h1 class="theme-card theme-text px-12 py-3 rounded-full font-black text-2xl uppercase inline-block border-4 shadow-xl tracking-wider" style="padding: 15px 40px; border-radius: 50px;">
+                <i class="fas fa-edit mr-2" style="color: var(--border-highlight);"></i> Editar División
+            </h1>
+        </header>
+
+        <main class="theme-card">
+            <a th:href="@{/ligas}" class="font-bold text-sm mb-8 inline-block theme-muted hover:text-white transition"><i class="fas fa-arrow-left"></i> Volver a Competiciones</a>
+
+            <form th:action="@{'/categorias/actualizar/' + ${categoria.id}}" th:object="${categoria}" method="post" class="space-y-6">
+                <input type="hidden" th:field="*{id}" />
+                <input type="hidden" th:field="*{liga.id}" />
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-[10px] font-black uppercase theme-muted mb-2 tracking-widest ml-1">Nombre</label>
+                        <input type="text" th:field="*{nombre}" class="theme-input" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black uppercase theme-muted mb-2 tracking-widest ml-1">Género</label>
+                        <div class="custom-select-wrapper shadow-md">
+                            <div id="filterGenderBtn" class="custom-select-btn">
+                                <span id="filterGenderText" th:text="${categoria.genero != null ? categoria.genero : 'Seleccionar...'}">Seleccionar...</span>
+                                <i class="fas fa-chevron-down theme-muted transition-transform duration-300" id="filterGenderIcon"></i>
+                            </div>
+                            
+                            <div id="filterGenderMenu" class="custom-select-menu">
+                                <div class="custom-select-option" data-val="MASCULINO">Masculino</div>
+                                <div class="custom-select-option" data-val="FEMENINO">Femenino</div>
+                                <div class="custom-select-option" data-val="MIXTO">Mixto</div>
+                            </div>
+                            <input type="hidden" th:field="*{genero}" id="filterGender" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black uppercase theme-muted mb-2 tracking-widest ml-1">Descripción / Notas</label>
+                    <textarea th:field="*{descripcion}" class="theme-input" rows="4"></textarea>
+                </div>
+
+                <div class="flex justify-between items-center pt-8 border-t theme-border mt-8">
+                    <a th:href="@{/ligas}" class="text-xs font-bold theme-muted hover:text-white uppercase transition">Cancelar</a>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase px-8 py-3 rounded-xl transition shadow-lg border-none hover:scale-105">
+                        <i class="fas fa-sync-alt mr-2"></i> Actualizar División
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <button class="theme-switcher-btn" onclick="toggleThemePanel()"><i class="fas fa-palette"></i></button>
+    <div class="theme-panel" id="themePanel">
+        <h4 class="text-sm font-black uppercase text-center mb-4 theme-text border-b pb-2 theme-border">Elige tu estilo</h4>
+        <div id="themeOptions"></div>
+    </div>
+
+    <script>
+        if (typeof globalThemes !== 'undefined') {
+            const themePanelOptions = document.getElementById('themeOptions');
+            for (const [key, data] of Object.entries(globalThemes)) {
+                const btn = document.createElement('div');
+                btn.className = 'theme-option';
+                btn.style.backgroundColor = data.colors.border || data.colors.highlight;
+                btn.innerHTML = `<span class="w-4 h-4 rounded-full bg-white opacity-50"></span> ${data.name}`;
+                btn.onclick = () => { applyThemeGlobal(key); localStorage.setItem('ctt_admin_theme', key); toggleThemePanel(); };
+                themePanelOptions.appendChild(btn);
+            }
+        }
+        function toggleThemePanel() { document.getElementById('themePanel').classList.toggle('active'); }
+
+        // Lógica Custom Dropdown
+        const filterBtn = document.getElementById('filterGenderBtn');
+        const filterMenu = document.getElementById('filterGenderMenu');
+        const filterText = document.getElementById('filterGenderText');
+        const filterInput = document.getElementById('filterGender');
+        const filterIcon = document.getElementById('filterGenderIcon');
+
+        filterBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterMenu.classList.toggle('active');
+            filterIcon.style.transform = filterMenu.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            filterBtn.style.borderColor = filterMenu.classList.contains('active') ? 'var(--border-highlight)' : 'var(--border-color)';
+        });
+
+        document.querySelectorAll('.custom-select-option').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                filterInput.value = item.getAttribute('data-val');
+                filterText.innerText = item.innerText;
+                
+                filterMenu.classList.remove('active');
+                filterIcon.style.transform = 'rotate(0deg)';
+                filterBtn.style.borderColor = 'var(--border-color)';
+            });
+        });
+
+        document.addEventListener('click', () => {
+            if (filterMenu.classList.contains('active')) {
+                filterMenu.classList.remove('active');
+                filterIcon.style.transform = 'rotate(0deg)';
+                filterBtn.style.borderColor = 'var(--border-color)';
+            }
+        });
+    </script>
+</body>
+</html>

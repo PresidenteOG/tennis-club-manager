@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console Admin - Almendral TC</title>
+    <link href="/vendor/fonts/montserrat.css"
+        rel="stylesheet">
+    <script src="/vendor/tailwind.js"></script>
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    <style>
+        /* ===== ESTILOS DE LA SIDEBAR ===== */
+        :root {
+            --atc-carbono: #1a1a1a;
+            --atc-pizarra: #334155;
+            --atc-plata: #94a3b8;
+            --atc-acero-luz: #e2e8f0;
+            --atc-negro-puro: #000000;
+            --atc-gris-borde: #475569;
+            --color-perfil: #8b5cf6;
+
+            /* Paleta de colores para Hovers */
+            --color-jugadores: #3b82f6;
+            /* Azul */
+            --color-usuarios: #8b5cf6;
+            /* Violeta */
+            --color-roles: #f59e0b;
+            /* Ámbar */
+            --color-ligas: #06b6d4;
+            /* Cian */
+            --color-equipos: #f43f5e;
+            /* Rosa/Rojo */
+            --color-calendario: #10b981;
+            /* Esmeralda */
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(0, 0, 0, 0.85);
+            border-right: 3px solid var(--atc-gris-borde);
+            padding: 30px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow: hidden;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .user-profile-section {
+            padding: 0 25px 25px 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        .user-profile-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-profile-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--color-perfil);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2);
+        }
+
+        .user-profile-link:hover::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--color-perfil);
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--color-perfil), #6d28d9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            color: var(--atc-plata);
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .user-role-badge {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--color-perfil);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .profile-arrow {
+            color: var(--atc-plata);
+            transition: transform 0.3s ease;
+        }
+
+        .user-profile-link:hover .profile-arrow {
+            color: var(--color-perfil);
+            transform: translateX(3px);
+        }
+
+        .profile-active-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+        }
+
+        .sidebar-header {
+            padding: 0 25px 20px 25px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-title {
+            color: var(--atc-plata);
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-subtitle {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.75rem;
+            font-weight: 400;
+            letter-spacing: 2px;
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 20px;
+            flex: 1;
+        }
+
+        .sidebar-menu::-webkit-scrollbar {
+            display: none;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 16px 20px;
+            color: var(--atc-plata);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.95rem;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .sidebar-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: rgba(255, 255, 255, 0.05);
+            transition: width 0.3s ease;
+        }
+
+        .sidebar-link:hover::before {
+            width: 100%;
+        }
+
+        .sidebar-icon {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-link:hover .sidebar-icon {
+            transform: scale(1.1);
+        }
+
+        .sidebar-link:hover {
+            color: white;
+            transform: translateX(5px);
+        }
+
+        /* Colores específicos para enlaces de la sidebar */
+        .sidebar-jugadores:hover {
+            color: var(--color-jugadores);
+        }
+
+        .sidebar-usuarios:hover {
+            color: var(--color-usuarios);
+        }
+
+        .sidebar-roles:hover {
+            color: var(--color-roles);
+        }
+
+        .sidebar-ligas:hover {
+            color: var(--color-ligas);
+        }
+
+        .sidebar-equipos:hover {
+            color: var(--color-equipos);
+        }
+
+        .sidebar-calendario:hover {
+            color: var(--color-calendario);
+        }
+
+        .sidebar-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 15px 20px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        .sidebar-version {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            z-index: 10;
+        }
+
+        /* Responsive para pantallas más pequeñas */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 240px;
+            }
+
+            .user-name {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+                padding: 20px 0;
+            }
+
+            .user-profile-section,
+            .sidebar-header,
+            .sidebar-link span,
+            .sidebar-divider,
+            .sidebar-footer {
+                display: none;
+            }
+
+            .user-profile-link {
+                justify-content: center;
+                padding: 15px 10px;
+                margin: 0 10px 15px 10px;
+            }
+
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+            }
+
+            .sidebar-menu {
+                padding: 0 15px;
+                align-items: center;
+            }
+
+            .sidebar-link {
+                padding: 15px;
+                justify-content: center;
+            }
+        }
+
+        /* ===== ESTILOS DEL DASHBOARD PRINCIPAL ===== */
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: radial-gradient(circle at center, #2d3748 0%, #0f172a 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        /* Ajuste del contenido principal para la sidebar */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: calc(100% - 280px);
+        }
+
+        /* --- HEADER --- */
+        .header-section {
+            padding: 70px 20px 50px 20px;
+            text-align: center;
+        }
+
+        .main-pill-title {
+            background: var(--atc-negro-puro);
+            color: white;
+            padding: 18px 90px;
+            border-radius: 100px;
+            font-weight: 900;
+            font-size: 2.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            display: inline-block;
+            border: 4px solid var(--atc-plata);
+        }
+
+        .admin-badge {
+            background: rgba(226, 232, 240, 0.1);
+            color: var(--atc-plata);
+            padding: 10px 30px;
+            border-radius: 5px;
+            font-weight: 900;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            border-left: 4px solid var(--atc-plata);
+            margin-bottom: 25px;
+            display: inline-block;
+        }
+
+        /* --- CONTENEDOR DE TARJETAS --- */
+        .menu-container {
+            max-width: 800px;
+            width: 90%;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 30px;
+            padding: 60px;
+            border: 6px solid var(--atc-gris-borde);
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5);
+            margin-bottom: 60px;
+        }
+
+        /* DISEÑO BASE DE BOTÓN (MANTIENE ANIMACIÓN CHULA) */
+        .admin-link {
+            display: grid;
+            grid-template-columns: 60px 1fr auto;
+            align-items: center;
+            padding: 25px 35px;
+            background: white;
+            border: 1px solid var(--atc-acero-luz);
+            border-radius: 20px;
+            margin-bottom: 18px;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* El Indicador Lateral (La "animación chula") */
+        .admin-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            transition: width 0.3s ease, background-color 0.3s ease;
+            z-index: 0;
+        }
+
+        .admin-link:hover {
+            transform: translateX(12px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-link:hover::before {
+            width: 10px;
+        }
+
+        .link-text {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--atc-pizarra);
+            text-transform: uppercase;
+            z-index: 1;
+            transition: color 0.3s;
+        }
+
+        .link-icon {
+            width: 45px;
+            height: 45px;
+            background: #f1f5f9;
+            color: var(--atc-pizarra);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+
+        .arrow-icon {
+            color: var(--atc-acero-luz);
+            transition: 0.3s;
+        }
+
+        /* --- LÓGICA DE COLORES POR CADA BOTÓN --- */
+
+        /* 1. Jugadores - AZUL */
+        .btn-jugadores:hover {
+            border-color: var(--color-jugadores);
+        }
+
+        .btn-jugadores:hover::before {
+            background-color: var(--color-jugadores);
+        }
+
+        .btn-jugadores:hover .link-text {
+            color: var(--color-jugadores);
+        }
+
+        .btn-jugadores:hover .link-icon {
+            background-color: var(--color-jugadores);
+            color: white;
+            transform: rotate(-10deg);
+        }
+
+        .btn-jugadores:hover .arrow-icon {
+            color: var(--color-jugadores);
+            transform: translateX(5px);
+        }
+
+        /* 2. Usuarios - VIOLETA */
+        .btn-usuarios:hover {
+            border-color: var(--color-usuarios);
+        }
+
+        .btn-usuarios:hover::before {
+            background-color: var(--color-usuarios);
+        }
+
+        .btn-usuarios:hover .link-text {
+            color: var(--color-usuarios);
+        }
+
+        .btn-usuarios:hover .link-icon {
+            background-color: var(--color-usuarios);
+            color: white;
+            transform: rotate(-10deg);
+        }
+
+        .btn-usuarios:hover .arrow-icon {
+            color: var(--color-usuarios);
+            transform: translateX(5px);
+        }
+
+        /* 3. Roles - ÁMBAR */
+        .btn-roles:hover {
+            border-color: var(--color-roles);
+        }
+
+        .btn-roles:hover::before {
+            background-color: var(--color-roles);
+        }
+
+        .btn-roles:hover .link-text {
+            color: var(--color-roles);
+        }
+
+        .btn-roles:hover .link-icon {
+            background-color: var(--color-roles);
+            color: white;
+            transform: rotate(-10deg);
+        }
+
+        .btn-roles:hover .arrow-icon {
+            color: var(--color-roles);
+            transform: translateX(5px);
+        }
+
+        /* 4. Ligas - CIAN */
+        .btn-ligas:hover {
+            border-color: var(--color-ligas);
+        }
+
+        .btn-ligas:hover::before {
+            background-color: var(--color-ligas);
+        }
+
+        .btn-ligas:hover .link-text {
+            color: var(--color-ligas);
+        }
+
+        .btn-ligas:hover .link-icon {
+            background-color: var(--color-ligas);
+            color: white;
+            transform: rotate(-10deg);
+        }
+
+        .btn-ligas:hover .arrow-icon {
+            color: var(--color-ligas);
+            transform: translateX(5px);
+        }
+
+        /* 5. Equipos - ROSA */
+        .btn-equipos:hover {
+            border-color: var(--color-equipos);
+        }
+
+        .btn-equipos:hover::before {
+            background-color: var(--color-equipos);
+        }
+
+        .btn-equipos:hover .link-text {
+            color: var(--color-equipos);
+        }
+
+        .btn-equipos:hover .link-icon {
+            background-color: var(--color-equipos);
+            color: white;
+            transform: rotate(-10deg);
+        }
+
+        .btn-equipos:hover .arrow-icon {
+            color: var(--color-equipos);
+            transform: translateX(5px);
+        }
+
+        /* 6. Calendario - ESMERALDA */
+        .btn-calendario:hover {
+            border-color: var(--color-calendario);
+        }
+
+        .btn-calendario:hover::before {
+            background-color: var(--color-calendario);
+        }
+
+        .btn-calendario:hover .link-text {
+            color: var(--color-calendario);
+        }
+
+        .btn-calendario:hover .link-icon {
+            background-color: var(--color-calendario);
+            color: white;
+            transform: rotate(-10deg);
+        }
+
+        .btn-calendario:hover .arrow-icon {
+            color: var(--color-calendario);
+            transform: translateX(5px);
+        }
+
+        .btn-back {
+            margin-top: 30px;
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            color: var(--atc-plata);
+            padding: 12px 30px;
+            border: 2px solid var(--atc-acero-luz);
+            border-radius: 10px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-back:hover {
+            background: var(--atc-pizarra);
+            color: white;
+            border-color: var(--atc-pizarra);
+        }
+
+        /* Responsive para pantallas más pequeñas */
+        @media (max-width: 1200px) {
+            .main-content {
+                margin-left: 240px;
+                width: calc(100% - 240px);
+            }
+
+            .main-pill-title {
+                padding: 15px 60px;
+                font-size: 2.2rem;
+            }
+
+            .menu-container {
+                padding: 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+            }
+
+            .header-section {
+                padding: 40px 15px 30px 15px;
+            }
+
+            .main-pill-title {
+                padding: 12px 40px;
+                font-size: 1.8rem;
+            }
+
+            .menu-container {
+                padding: 25px;
+                width: 95%;
+            }
+
+            .admin-link {
+                grid-template-columns: 50px 1fr auto;
+                padding: 18px 25px;
+            }
+
+            .link-text {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <header class="header-section flex flex-col items-center">
+            <div class="admin-badge">Centro de Control Administrativo v1.2</div>
+            <h1 class="main-pill-title">Administración</h1>
+        </header>
+
+        <div class="w-full max-w-[800px] mx-auto mb-6">
+            <div
+                class="p-8 bg-slate-800 rounded-3xl border-4 border-slate-600 shadow-2xl flex items-center justify-between overflow-hidden relative group transition-all hover:border-slate-400">
+                <div class="z-10">
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Club de Tenis Almendral</p>
+                    <h3 class="text-white font-black uppercase text-2xl tracking-tight">Número de Socios</h3>
+                    <div class="flex items-baseline gap-3 mt-2">
+                        <span id="contadorSocios" class="text-emerald-400 text-6xl font-black">0</span>
+                        <span class="text-slate-500 font-bold text-sm uppercase tracking-tighter">Miembros
+                            activos</span>
+                    </div>
+                </div>
+
+                <div
+                    class="absolute -right-6 top-1/2 -translate-y-1/2 opacity-10 group-hover:opacity-20 transition-all duration-500">
+                    <i class="fas fa-users text-[140px] text-white"></i>
+                </div>
+
+                <div class="z-10">
+                    <a href="/jugadores"
+                        class="bg-white/5 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-xl transition-all border border-white/10 hover:border-emerald-400 shadow-xl">
+                        Gestionar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8 bg-white/95 rounded-3xl border-4 border-slate-600 shadow-2xl w-full max-w-[800px] mx-auto">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h3 class="text-slate-800 font-black uppercase text-xl tracking-tight">Estado de Pistas</h3>
+                    <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Disponibilidad en tiempo real
+                    </p>
+                </div>
+                <input type="date" id="fechaFiltro"
+                    class="bg-slate-100 border-2 border-slate-200 text-slate-700 font-bold rounded-xl p-3 outline-none focus:ring-4 focus:ring-emerald-500/20 transition-all cursor-pointer">
+            </div>
+
+            <div id="pistasGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            </div>
+        </div>
+        <div class="w-full max-w-[800px] mx-auto mb-6 mt-6">
+            <div class="p-8 bg-slate-900 rounded-3xl border-4 border-slate-700 shadow-2xl relative overflow-hidden">
+                <div class="z-10 relative">
+                    <p class="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-1">Comunicación Global</p>
+                    <h3 class="text-white font-black uppercase text-2xl tracking-tight mb-6">Enviar Mail a todos los usuarios
+                    </h3>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-slate-400 text-[10px] font-bold uppercase ml-2">Asunto</label>
+                            <input type="text" id="asuntoMail" placeholder="Título del correo..."
+                                class="w-full bg-slate-800 border-2 border-slate-600 text-white font-bold rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500 transition-all">
+                        </div>
+
+                        <div>
+                            <label class="text-slate-400 text-[10px] font-bold uppercase ml-2">Mensaje</label>
+                            <textarea id="contenidoMail" rows="4"
+                                class="w-full bg-slate-800 border-2 border-slate-600 text-white font-medium rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                                placeholder="Escribe el comunicado aquí..."></textarea>
+                        </div>
+
+                        <button type="button" onclick="enviarComunicado()" id="btnEnviarMail"
+                            class="w-full bg-white hover:bg-emerald-500 hover:text-white text-slate-900 font-black uppercase tracking-widest py-4 rounded-2xl transition-all shadow-xl active:scale-95">
+                            Enviar a todos los usuarios
+                        </button>
+                    </div>
+                </div>
+                <i class="fas fa-envelope-open-text absolute -right-4 -bottom-4 text-9xl text-white/5 -rotate-12"></i>
+            </div>
+        </div>
+
+        <footer class="text-center opacity-30 py-10">
+            <p class="text-[9px] text-white font-black uppercase tracking-[10px]">Almendral TC 2026</p>
+        </footer>
+    </div>
+
+    <div id="modalEventos"
+        class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div
+            class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all duration-300 scale-100">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <div>
+                    <h3 id="modalTituloPista" class="text-slate-800 font-black uppercase text-lg leading-none">Pista
+                    </h3>
+                    <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mt-1">Horarios Reservados
+                    </p>
+                </div>
+                <button onclick="cerrarModal()" class="text-slate-400 hover:text-rose-500 transition-colors">
+                    <i class="fas fa-times-circle text-2xl"></i>
+                </button>
+            </div>
+            <div id="modalListaEventos" class="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
+            </div>
+            <div class="p-4 bg-slate-50 text-center">
+                <button onclick="cerrarModal()"
+                    class="bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest px-8 py-4 rounded-2xl hover:bg-slate-700 transition-all shadow-lg">
+                    Entendido
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Obtener la fecha actual en formato local
+            const hoy = new Date();
+
+            // 2. Ajustar el formato a YYYY-MM-DD (necesario para el input type="date")
+            const year = hoy.getFullYear();
+            const month = String(hoy.getMonth() + 1).padStart(2, '0');
+            const day = String(hoy.getDate()).padStart(2, '0');
+
+            const fechaFormateada = `${year}-${month}-${day}`;
+
+            // 3. Asignar la fecha al input
+            const inputFecha = document.getElementById('fechaFiltro');
+            inputFecha.value = fechaFormateada;
+
+            // 4. Cargar los datos por primera vez
+            cargarDatosDashboard();
+        });
+        async function cargarDatosDashboard() {
+            const fecha = document.getElementById('fechaFiltro').value;
+
+            try {
+                // 1. Obtener Ocupación de Pistas
+                const resPistas = await fetch(`/api/dashboard/ocupacion?fecha=${fecha}`);
+                const pistas = await resPistas.json();
+                renderPistas(pistas);
+
+                // 2. Obtener Conteo de Socios (RUTA CORREGIDA)
+                const resSocios = await fetch('/api/dashboard/total-socios');
+                const totalSocios = await resSocios.json();
+
+                // Actualizamos el contador con el dato real de la base de datos
+                document.getElementById('contadorSocios').innerText = totalSocios;
+
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                // Fallback: Si la API falla, muestra un número por defecto para no ver el "0"
+                if (document.getElementById('contadorSocios').innerText === "0") {
+                    document.getElementById('contadorSocios').innerText = "--";
+                }
+            }
+        }
+
+        function renderPistas(datos) {
+            const grid = document.getElementById('pistasGrid');
+            grid.innerHTML = '';
+
+            datos.forEach(pista => {
+                const estaOcupada = pista.horasOcupadas.length > 0;
+                const horasJson = JSON.stringify(pista.horasOcupadas);
+
+                const card = `
+                    <div ${estaOcupada ? `onclick='abrirModal("${pista.nombrePista}", ${horasJson})'` : ''} 
+                         class="group border-2 rounded-2xl p-5 flex items-center justify-between transition-all transform active:scale-95 
+                         ${estaOcupada ? 'border-rose-500 bg-rose-50 cursor-pointer hover:bg-rose-100 shadow-md' : 'border-emerald-500 bg-emerald-100 opacity-80'}">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
+                                <i class="fas ${estaOcupada ? 'fa-calendar-check text-rose-500' : 'fa-check-circle text-emerald-500'} text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-black text-slate-800 uppercase text-xs tracking-tight">${pista.nombrePista}</h4>
+                                <span class="text-[9px] font-bold ${estaOcupada ? 'text-rose-600' : 'text-emerald-600'} uppercase">
+                                    ${estaOcupada ? 'Click para ver eventos' : 'Libre todo el día'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            ${estaOcupada ? '<span class="flex h-3 w-3 rounded-full bg-rose-500 animate-pulse"></span>' : ''}
+                            <i class="fas fa-chevron-right text-slate-300 text-xs group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>`;
+                grid.innerHTML += card;
+            });
+        }
+
+        function abrirModal(nombre, horas) {
+            document.getElementById('modalTituloPista').innerText = nombre;
+            const lista = document.getElementById('modalListaEventos');
+            
+            // ✅ CAMBIADO: .localeCompare para ordenar strings ("14:30" vs "15:00") y quitado el ":00" forzado
+            lista.innerHTML = horas.sort((a, b) => a.localeCompare(b)).map(h => `
+                <div class="flex items-center justify-between p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 font-bold text-sm shadow-sm">
+                    <span class="flex items-center gap-3"><i class="far fa-clock text-rose-400"></i> ${h} hs</span>
+                    <span class="text-[9px] bg-rose-500 text-white px-3 py-1 rounded-full uppercase font-black">Reservado</span>
+                </div>`).join('');
+                
+            document.getElementById('modalEventos').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalEventos').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        window.onclick = (e) => { if (e.target.id === 'modalEventos') cerrarModal(); }
+        document.addEventListener('DOMContentLoaded', cargarDatosDashboard);
+        document.getElementById('fechaFiltro').addEventListener('change', cargarDatosDashboard);
+
+
+        async function enviarComunicado() {
+            const subject = document.getElementById('asuntoMail').value;
+            const content = document.getElementById('contenidoMail').value;
+            const btn = document.getElementById('btnEnviarMail');
+
+            if (!subject || !content) {
+                alert("Por favor, rellena todos los campos.");
+                return;
+            }
+
+            try {
+                btn.innerText = "ENVIANDO... ";
+                btn.style.opacity = "0.5";
+                btn.disabled = true;
+
+                const response = await fetch('/api/mail/send-massive', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subject, content })
+                });
+
+                if (response.ok) {
+                    alert(" ¡Proceso de envío iniciado! Los socios recibirán el mail pronto.");
+                    document.getElementById('asuntoMail').value = "";
+                    document.getElementById('contenidoMail').value = "";
+                } else {
+                    alert(" Error en el servidor al intentar enviar.");
+                }
+            } catch (error) {
+                alert(" Error de conexión.");
+            } finally {
+                btn.innerText = " Enviar a toda la base de datos";
+                btn.style.opacity = "1";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

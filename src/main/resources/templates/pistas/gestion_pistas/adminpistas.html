@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Lista de Pistas</title>
+        <link href="/vendor/bootstrap.min.css" rel="stylesheet">
+        <style>
+
+            body {
+                margin: 0;
+                font-family: 'Arial', sans-serif;
+                background: linear-gradient(135deg, #007bff, #00c6ff);
+                color: #ffffff;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                flex-direction: column;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 1200px;
+                background-color: #ffffff;
+                padding: 20px;
+                border-radius: 12px;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            h1 {
+                text-align: center;
+                color: #007bff;
+                margin-bottom: 30px;
+                font-size: 2.5em;
+                font-weight: 600;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+                margin-top: 20px;
+                border-radius: 12px;
+                background-color: #f5f5f5;
+                padding: 10px;
+                flex: 1;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                border-radius: 12px;
+            }
+
+            th, td {
+                padding: 12px;
+                text-align: center;
+                font-size: 1em;
+            }
+
+            th {
+                background-color: #007bff;
+                color: #ffffff;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+
+            tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+
+            tr:hover {
+                background-color: #e0e0e0;
+                transition: background-color 0.2s ease-in-out;
+            }
+
+            td {
+                color: #007bff;
+                font-weight: 500;
+            }
+
+            .search-container {
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .search-container input {
+                padding: 10px 15px;
+                width: 80%;
+                font-size: 1.1em;
+                border: 2px solid #007bff;
+                border-radius: 8px;
+                outline: none;
+                transition: border-color 0.3s;
+            }
+
+            .search-container input:focus {
+                border-color: #00c6ff;
+            }
+
+            .pagination {
+                text-align: center;
+                margin-top: 20px;
+            }
+
+            .pagination button {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                margin: 0 5px;
+                font-size: 1.1em;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+
+            .pagination button.active {
+                background-color: #00c6ff;
+            }
+
+            .pagination button:hover {
+                background-color: #0056b3;
+            }
+
+            .btn-container {
+                text-align: center;
+                margin-top: 20px;
+                flex-shrink: 0;
+            }
+
+            .btn {
+                display: inline-block;
+                padding: 12px 24px;
+                margin: 10px;
+                font-size: 1.1em;
+                font-weight: bold;
+                border-radius: 8px;
+                text-transform: uppercase;
+                text-decoration: none;
+                transition: background-color 0.3s ease-in-out;
+                color: #ffffff;
+            }
+            .btn-add {
+                background-color: #28a745;
+            }
+
+            .btn-add:hover {
+                background-color: #218838;
+            }
+
+            .btn-back {
+                background-color: #17a2b8;
+                color: #ffffff;
+                padding: 12px 24px;
+                font-size: 1.1em;
+                border-radius: 8px;
+                text-transform: uppercase;
+                text-decoration: none;
+                transition: background-color 0.3s ease-in-out;
+            }
+
+
+            .btn-back:hover {
+                background-color: #138496;
+            }
+        </style>
+    </head>
+    <body>
+
+        <div class="container">
+            <h1>Lista de Pistas</h1>
+
+            <!-- Campo de búsqueda -->
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Buscar por nombre...">
+            </div>
+
+            <!-- Tabla para mostrar las pistas -->
+            <div class="table-wrapper">
+                <table id="pistaTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Iterar sobre la lista de pistas -->
+                        <tr th:each="pista : ${pistas}">
+                            <td th:text="${pista.id}"></td>
+                            <td th:text="${pista.nombrePista}"></td>
+                            <td th:text="${pista.disponible}"></td>
+                            <td class="action-buttons">
+                                <a th:href="@{/adminpistas/editpista/{id}(id=${pista.id})}" class="btn btn-warning btn-sm mx-1">Editar</a>
+                                <a th:href="@{/adminpistas/deletepista/{id}(id=${pista.id})}" class="btn btn-danger btn-sm mx-1" 
+                                   onclick="return confirm('¿Estás seguro de que deseas eliminar esta pista?');">Eliminar</a>
+                            </td>
+
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Controles de paginación -->
+            <div class="pagination" id="paginationControls"></div>
+
+            <!-- Botón de regresar -->
+            <div class="btn-container">
+                <a href="/menu_admin" class="btn-back">Volver al Menú</a>
+                <a href="/adminpistas/addpista" class="btn btn-add">Añadir Nueva Pista</a>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const rowsPerPage = 5;
+                let currentPage = 1;
+
+                const tableBody = document.querySelector('#pistaTable tbody');
+                const rows = Array.from(tableBody.querySelectorAll('tr'));
+                const searchInput = document.getElementById('searchInput');
+                const paginationControls = document.getElementById('paginationControls');
+                let filteredRows = rows;
+
+                function renderTable(page) {
+                    const start = (page - 1) * rowsPerPage;
+                    const end = start + rowsPerPage;
+
+                    rows.forEach(row => (row.style.display = 'none'));
+                    filteredRows.slice(start, end).forEach(row => (row.style.display = ''));
+                }
+
+                function renderPagination() {
+                    const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+                    paginationControls.innerHTML = '';
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        const button = document.createElement('button');
+                        button.textContent = i;
+                        button.className = i === currentPage ? 'active' : '';
+                        button.addEventListener('click', () => {
+                            currentPage = i;
+                            renderTable(currentPage);
+                            renderPagination();
+                        });
+                        paginationControls.appendChild(button);
+                    }
+                }
+
+                function filterRows() {
+                    const term = searchInput.value.toLowerCase();
+                    filteredRows = rows.filter(row =>
+                        row.cells[1].textContent.toLowerCase().includes(term)
+                    );
+                    currentPage = 1;
+                    renderTable(currentPage);
+                    renderPagination();
+                }
+
+                searchInput.addEventListener('input', filterRows);
+                renderTable(currentPage);
+                renderPagination();
+            });
+        </script>
+    </body>
+</html>

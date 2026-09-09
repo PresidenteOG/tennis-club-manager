@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario - Almendral TC</title>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <script src="/vendor/tailwind.js"></script>
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* 🚨 TEMA JUGADOR (Verde) PANTALLA COMPLETA */
+        :root { --bg-color: #1a4731; --bg-dot: #2d5a27; --btn-color: #cc5233; }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(var(--bg-dot) 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            overflow-y: scroll;
+        }
+
+        /* El contenedor principal ocupa el 100% porque no hay sidebar */
+        .main-content { flex: 1; padding: 40px 20px; display: flex; justify-content: center; align-items: flex-start; }
+
+        /* CALENDARIO CSS */
+        .container { max-width: 1100px; width: 100%; background: #ffffff; border-radius: 40px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5); overflow: hidden; }
+        .header { background: var(--bg-color); color: white; padding: 40px; text-align: center; border-bottom: 5px solid var(--btn-color); position: relative; }
+        .header h1 { font-size: 2.2em; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; margin-top: 10px; }
+        
+        .back-btn { position: absolute; top: 25px; left: 30px; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.3); padding: 8px 20px; border-radius: 12px; cursor: pointer; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+        .back-btn:hover { background: #ffffff; color: var(--bg-color); transform: translateX(-5px); }
+
+        .calendar-wrapper { padding: 40px; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .month-year { font-size: 1.8em; font-weight: 900; color: var(--bg-color); text-transform: uppercase; }
+        .nav-btn { background: var(--btn-color); color: white; border: none; padding: 12px 25px; border-radius: 15px; cursor: pointer; font-size: 12px; font-weight: 800; text-transform: uppercase; transition: 0.3s; margin-left: 10px; }
+        .nav-btn:hover { transform: translateY(-2px); opacity: 0.9;}
+
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
+        .day-header { text-align: center; font-weight: 800; color: var(--btn-color); padding: 10px; text-transform: uppercase; font-size: 0.85em; letter-spacing: 2px; }
+        
+        /* Celdas clickeables */
+        .day-cell { min-height: 110px; border: 2px solid #edf2f0; border-radius: 20px; padding: 12px; background: #fff; transition: 0.3s; cursor: pointer; position: relative;}
+        .day-cell:hover { border-color: var(--bg-color); box-shadow: 0 8px 15px rgba(0,0,0,0.1); transform: translateY(-3px); }
+        .day-number { font-weight: 800; font-size: 1.1em; color: var(--bg-color); margin-bottom: 8px; }
+        .day-cell.other-month { opacity: 0.3; background: #f9fafa; }
+        .day-cell.today { background: #edf2f0; border: 2px solid var(--bg-color); }
+        .day-cell.today .day-number { background: var(--bg-color); color: white; display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; border-radius: 50%; }
+
+        .event { background: var(--bg-color); color: white; padding: 6px 10px; margin-top: 6px; border-radius: 8px; font-size: 0.75em; font-weight: 700; border-left: 4px solid var(--btn-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 2px 4px rgba(0,0,0,0.1); pointer-events: none;}
+        .event-count { font-size: 0.75em; color: var(--btn-color); font-weight: 800; text-align: center; margin-top: 5px; pointer-events: none;}
+
+        /* Modal Info Evento */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal.active { display: flex; }
+        .modal-content { background: #ffffff; padding: 40px; border-radius: 30px; max-width: 600px; width: 90%; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.4); max-height: 90vh; overflow-y: auto;}
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #edf2f0; padding-bottom: 15px; }
+        .modal-title { font-weight: 900; color: var(--bg-color); text-transform: uppercase; font-size: 1.4rem; }
+        .close-btn { background: none; border: none; font-size: 28px; font-weight: 900; cursor: pointer; color: #94a3b8; transition: 0.3s; }
+        .close-btn:hover { color: var(--btn-color); transform: scale(1.2) rotate(90deg); }
+        
+        .event-detail-box { border-left: 6px solid var(--btn-color); background: #f8fafc; border-radius: 20px; padding: 25px; margin-bottom: 15px; border-right: 2px solid #e2e8f0; border-top: 2px solid #e2e8f0; border-bottom: 2px solid #e2e8f0;}
+        .event-detail-box h3 { color: var(--bg-color); font-weight: 900; margin-top: 0; margin-bottom: 15px; text-transform: uppercase; font-size: 1.2rem; }
+        .event-detail-box p { margin: 10px 0; color: #475569; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
+        .event-detail-box i { color: var(--btn-color); width: 20px; text-align: center; }
+        .event-detail-box strong { color: var(--bg-color); font-weight: 800; }
+
+        @media (max-width: 768px) { .calendar-header { flex-direction: column; gap: 20px; } .nav-buttons { display: flex; width: 100%; justify-content: space-between; } .day-cell { min-height: 80px; padding: 5px; } .day-header { font-size: 0.7em; } }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <div class="container">
+            <div class="header">
+                <a href="/menu_principal" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Volver al Menú
+                </a>
+                <h1>Calendario de Actividades</h1>
+            </div>
+
+            <div class="calendar-wrapper">
+                <div class="calendar-header">
+                    <div class="month-year" id="monthYear"></div>
+                    <div class="nav-buttons">
+                        <button class="nav-btn" onclick="previousMonth()"><i class="fas fa-chevron-left mr-1"></i> Anterior</button>
+                        <button class="nav-btn" onclick="nextMonth()">Siguiente <i class="fas fa-chevron-right ml-1"></i></button>
+                    </div>
+                </div>
+
+                <div class="calendar" id="calendarGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="eventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalDateTitle">Actividades del Día</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="eventDetails"></div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        let eventsData = /*[[${eventosJson}]]*/ '[]';
+        let events = [];
+        try { events = typeof eventsData === 'string' ? JSON.parse(eventsData) : eventsData; if (!Array.isArray(events)) events = []; } catch (e) { events = []; }
+        
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        const today = new Date();
+
+        function parseEventDate(dateArray) { if (Array.isArray(dateArray)) { return new Date(dateArray[0], dateArray[1] - 1, dateArray[2]); } return new Date(dateArray); }
+        function getEventsForDate(date) { return events.filter(event => { const d = parseEventDate(event.date); return d.getDate() === date.getDate() && d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear(); }); }
+
+        function generateCalendar() {
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const prevLastDay = new Date(currentYear, currentMonth, 0);
+            
+            const firstDayIndex = (firstDay.getDay() + 6) % 7; 
+            const grid = document.getElementById('calendarGrid');
+            
+            let html = `<div class="day-header">Lun</div><div class="day-header">Mar</div><div class="day-header">Mié</div><div class="day-header">Jue</div><div class="day-header">Vie</div><div class="day-header">Sáb</div><div class="day-header">Dom</div>`;
+            
+            for (let i = firstDayIndex - 1; i >= 0; i--) html += createDayCell(prevLastDay.getDate() - i, new Date(currentYear, currentMonth - 1, prevLastDay.getDate() - i), true, false);
+            for (let day = 1; day <= lastDay.getDate(); day++) { const date = new Date(currentYear, currentMonth, day); html += createDayCell(day, date, false, date.toDateString() === today.toDateString()); }
+            const rem = 42 - (firstDayIndex + lastDay.getDate());
+            for (let day = 1; day <= rem; day++) html += createDayCell(day, new Date(currentYear, currentMonth + 1, day), true, false);
+            grid.innerHTML = html;
+        }
+
+        // CELDAS CLICKABLES
+        function createDayCell(day, date, otherMonth, isToday) {
+            const dayEvents = getEventsForDate(date);
+            let cssClass = 'day-cell' + (otherMonth ? ' other-month' : '') + (isToday ? ' today' : '');
+            const dateStr = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
+            
+            let eventsHtml = '';
+            const maxVisible = 2;
+            
+            dayEvents.slice(0, maxVisible).forEach(e => eventsHtml += `<div class="event">${e.title}</div>`);
+            if (dayEvents.length > maxVisible) eventsHtml += `<div class="event-count">+${dayEvents.length - maxVisible} reservas más</div>`;
+            
+            if(dayEvents.length > 0) {
+                return `<div class="${cssClass}" onclick="openDayModal('${dateStr}')"><div class="day-number">${day}</div>${eventsHtml}</div>`;
+            } else {
+                return `<div class="${cssClass}"><div class="day-number">${day}</div></div>`;
+            }
+        }
+
+        function updateCalendar() {
+            const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            document.getElementById('monthYear').textContent = `${months[currentMonth]} ${currentYear}`;
+            generateCalendar();
+        }
+
+        function previousMonth() { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } updateCalendar(); }
+        function nextMonth() { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } updateCalendar(); }
+
+        // ABRIR MODAL CON TODOS LOS EVENTOS DEL DÍA (Soluciona el undefined y los eventos ocultos)
+        function openDayModal(dateStr) {
+            const parts = dateStr.split('-');
+            const targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            const dayEvents = getEventsForDate(targetDate);
+            
+            document.getElementById('modalDateTitle').innerText = `Actividades: ${parts[2]}/${parts[1].padStart(2,'0')}/${parts[0]}`;
+            
+            let modalHtml = '';
+            
+            dayEvents.forEach(event => {
+                // ✅ SOLUCIÓN AL UNDEFINED (Si viene objeto, busca nombrePista o nombre. Si viene string, lo pinta)
+                let nombrePista = 'No asignada';
+                if (event.pista) {
+                    nombrePista = typeof event.pista === 'object' 
+                                  ? (event.pista.nombrePista || event.pista.nombre || 'Pista ID: ' + event.pista.id) 
+                                  : event.pista;
+                }
+                
+                modalHtml += `
+                    <div class="event-detail-box">
+                        <h3>${event.title}</h3>
+                        <p><i class="far fa-clock"></i> <strong>Hora:</strong> ${formatTime(event.time)}</p>
+                        <p><i class="fas fa-map-marker-alt"></i> <strong>Lugar:</strong> ${nombrePista}</p>
+                        <p><i class="fas fa-align-left"></i> <strong>Detalle:</strong> ${event.description || 'N/A'}</p>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('eventDetails').innerHTML = modalHtml;
+            document.getElementById('eventModal').classList.add('active');
+        }
+
+        function formatTime(t) { return Array.isArray(t) ? `${t[0].toString().padStart(2, '0')}:${t[1].toString().padStart(2, '0')}` : t || 'No especificada'; }
+        
+        function closeModal() { document.getElementById('eventModal').classList.remove('active'); }
+        document.getElementById('eventModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+        
+        updateCalendar();
+    </script>
+</body>
+</html>

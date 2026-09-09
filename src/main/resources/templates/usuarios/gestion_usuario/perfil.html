@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Perfil - Almendral TC</title>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <script src="/vendor/tailwind.js"></script>
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    <style>
+        :root { --bg-grad-1: #1f2937; --bg-grad-2: #0f172a; --card-bg: #1e293b; --card-bg-hover: #0f172a; --border-color: #334155; --border-highlight: #475569; --text-main: #f1f5f9; --text-muted: #94a3b8; --btn-bg: #334155; --btn-hover: #475569; }
+        body { font-family: 'Montserrat', sans-serif; background: radial-gradient(circle at center, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%); color: var(--text-main); min-height: 100vh; margin: 0; display: flex; transition: background 0.5s ease;}
+        
+        body.admin-layout .main-content { margin-left: 280px; width: calc(100% - 280px); }
+        body.player-layout .main-content { margin-left: 0; width: 100%; }
+        .main-content { flex: 1; display: flex; flex-direction: column; }
+
+        .header-gradient { background: var(--bg-grad-2); border-bottom: 2px solid var(--border-color); }
+        .profile-card { margin-top: -60px; background: var(--card-bg); border-radius: 30px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5); border: 4px solid var(--border-color); z-index: 10; position: relative;}
+        
+        .theme-input { border: 2px solid var(--border-color); border-radius: 12px; padding: 12px 16px; width: 100%; font-weight: 600; color: var(--text-main); background: var(--card-bg-hover); transition: 0.3s; }
+        .theme-input:focus { border-color: var(--border-highlight); outline: none; }
+        .theme-btn { background: var(--btn-bg); color: var(--text-main); transition: 0.3s; }
+        .theme-btn:hover { background: var(--btn-hover); border-color: var(--border-highlight);}
+
+        .theme-switcher-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--card-bg); border: 3px solid var(--border-highlight); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 999; transition: 0.3s; }
+        .theme-switcher-btn:hover { transform: rotate(45deg) scale(1.1); }
+        .theme-panel { position: fixed; bottom: 100px; right: 30px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 20px; padding: 20px; width: 250px; box-shadow: 0 15px 40px rgba(0,0,0,0.8); z-index: 998; display: none; opacity: 0; transition: 0.3s; }
+        .theme-panel.active { display: block; opacity: 1; }
+        .theme-option { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 10px; transition: 0.2s; color: white; }
+        .theme-option:hover { transform: translateX(5px); border-color: rgba(255,255,255,0.3); }
+
+        @media (max-width: 768px) { body.admin-layout .main-content { margin-left: 70px; width: calc(100% - 70px); } }
+    </style>
+</head>
+<body th:classappend="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')} ? 'admin-layout' : 'player-layout'">
+
+    <div sec:authorize="hasAuthority('ROLE_ADMIN')">
+        <div th:replace="fragments/sidebar :: sidebar"></div>
+    </div>
+
+    <div class="main-content">
+        <a th:href="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')} ? '/menu_admin' : '/menu_principal'" 
+           class="absolute top-6 left-6 flex items-center gap-2 font-900 uppercase text-[10px] tracking-[3px] transition z-50 theme-muted hover:text-white"
+           th:style="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')} ? 'left: 310px;' : 'left: 20px;'">
+            <i class="fas fa-arrow-left"></i> Volver al menú
+        </a>
+
+        <div class="header-gradient h-64 w-full flex justify-center pt-10">
+            <h1 class="text-3xl font-black uppercase tracking-widest mt-4 theme-text" style="color: var(--border-highlight);">Ajustes de Cuenta</h1>
+        </div>
+
+        <div class="max-w-4xl mx-auto px-4 pb-20 w-full relative">
+            <div th:if="${mensaje}" class="absolute -top-16 left-0 right-0 p-4 bg-emerald-900/80 border-2 border-emerald-500 text-emerald-300 rounded-2xl shadow-lg text-center font-bold uppercase text-xs z-20" th:text="${mensaje}"></div>
+            
+            <form th:action="@{/perfil/guardar}" method="POST" enctype="multipart/form-data">
+                <div class="profile-card p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row gap-10 items-center md:items-start">
+                        
+                        <div class="flex flex-col items-center min-w-[220px]">
+                            <div class="relative group cursor-pointer" onclick="openImagePreview(this.querySelector('img').src)">
+                                <img id="preview" th:src="${usuario.avatar != null && !usuario.avatar.isEmpty()} ? @{/images/{path}(path=${usuario.avatar})} : @{/vendor/default-avatar.svg} + ${usuario.nombre} + '&background=random&color=fff'"
+                                     class="w-48 h-48 rounded-full border-4 shadow-xl object-cover" style="border-color: var(--border-highlight);">
+                            </div>
+                            
+                            <div class="mt-6 space-y-3 w-full">
+                                <label class="block text-center text-[10px] font-black uppercase py-3 rounded-xl cursor-pointer transition theme-btn border border-transparent">
+                                    <i class="fas fa-upload mr-2"></i> Cambiar Foto
+                                    <input type="file" name="archivoImagen" id="file-input" class="hidden" accept="image/*">
+                                </label>
+                                <a th:if="${usuario.avatar != null && !usuario.avatar.isEmpty()}" 
+                                   href="javascript:void(0)" onclick="openDeleteModal('/perfil/eliminar-avatar')"
+                                   class="block text-center bg-red-900/30 hover:bg-red-600 hover:text-white text-red-500 border border-red-800 text-[10px] font-black uppercase py-3 rounded-xl transition">
+                                    <i class="fas fa-trash-alt mr-2"></i> Eliminar Foto
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 w-full space-y-6 mt-4 md:mt-0">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                                <div><label class="text-[10px] font-bold uppercase theme-muted">Nombre</label><input type="text" name="nombre" th:value="${usuario.nombre}" class="theme-input"></div>
+                                <div><label class="text-[10px] font-bold uppercase theme-muted">Primer Apellido</label><input type="text" name="primerApellido" th:value="${usuario.primerApellido}" class="theme-input"></div>
+                                <div><label class="text-[10px] font-bold uppercase theme-muted">Email</label><input type="email" name="email" th:value="${usuario.email}" class="theme-input"></div>
+                                <div><label class="text-[10px] font-bold uppercase theme-muted">Teléfono</label><input type="text" name="telefono" th:value="${usuario.telefono}" class="theme-input"></div>
+                                <div class="md:col-span-2"><label class="text-[10px] font-bold uppercase theme-muted">Nueva Contraseña</label><input type="password" name="password" class="theme-input" placeholder="Dejar en blanco para no cambiar"></div>
+                            </div>
+
+                            <div class="pt-8 flex justify-end border-t mt-4" style="border-color: var(--border-color);">
+                                <button type="submit" class="theme-btn border-2 px-10 py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-lg hover:scale-105">Guardar Cambios</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="imagePreviewModal" class="fixed inset-0 z-[300] hidden flex items-center justify-center bg-black/90 backdrop-blur-sm" onclick="closeImagePreview()">
+        <img id="modalPreviewImg" class="max-w-[90%] max-h-[90%] rounded-2xl border-4 shadow-2xl object-cover transform scale-95 transition-transform duration-300" style="border-color: var(--border-highlight);">
+    </div>
+
+    <div id="deleteModal" class="fixed inset-0 z-[500] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity">
+        <div class="theme-card max-w-sm w-full mx-4 shadow-2xl rounded-3xl p-8 transform scale-95 transition-transform" id="deleteModalContent">
+            <div class="text-center">
+                <div class="w-20 h-20 mx-auto bg-red-900/30 rounded-full flex items-center justify-center mb-6"><i class="fas fa-exclamation-triangle text-4xl text-red-500"></i></div>
+                <h3 class="text-2xl font-black uppercase theme-text mb-3">¿Borrar foto?</h3>
+                <div class="flex gap-4 justify-center mt-6">
+                    <button onclick="closeDeleteModal()" class="w-full py-3 rounded-xl font-bold uppercase theme-muted theme-btn text-xs">Cancelar</button>
+                    <a id="confirmDeleteBtn" href="#" class="w-full py-3 rounded-xl font-bold uppercase text-white bg-red-600 shadow-lg text-xs flex items-center justify-center hover:bg-red-700">Sí, Eliminar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div sec:authorize="hasAuthority('ROLE_ADMIN')">
+        <button class="theme-switcher-btn" onclick="toggleThemePanel()"><i class="fas fa-palette"></i></button>
+        <div class="theme-panel" id="themePanel">
+            <h4 class="text-sm font-black uppercase text-center mb-4 theme-text border-b pb-2 theme-border">Elige tu estilo</h4>
+            <div id="themeOptions"></div>
+        </div>
+        <script>
+            if (typeof globalThemes !== 'undefined') {
+                const themePanelOptions = document.getElementById('themeOptions');
+                for (const [key, data] of Object.entries(globalThemes)) {
+                    const btn = document.createElement('div');
+                    btn.className = 'theme-option';
+                    btn.style.backgroundColor = data.colors.border || data.colors.highlight;
+                    btn.innerHTML = `<span class="w-4 h-4 rounded-full bg-white opacity-50"></span> ${data.name}`;
+                    btn.onclick = () => { applyThemeGlobal(key); localStorage.setItem('ctt_admin_theme', key); toggleThemePanel(); };
+                    themePanelOptions.appendChild(btn);
+                }
+            }
+            function toggleThemePanel() { document.getElementById('themePanel').classList.toggle('active'); }
+        </script>
+    </div>
+
+    <script>
+        document.getElementById('file-input').onchange = function (evt) {
+            const [file] = this.files;
+            if (file) { document.getElementById('preview').src = URL.createObjectURL(file); }
+        }
+        function openImagePreview(src) { document.getElementById('modalPreviewImg').src = src; document.getElementById('imagePreviewModal').classList.remove('hidden'); setTimeout(() => document.getElementById('modalPreviewImg').classList.replace('scale-95', 'scale-100'), 10); }
+        function closeImagePreview() { document.getElementById('modalPreviewImg').classList.replace('scale-100', 'scale-95'); setTimeout(() => document.getElementById('imagePreviewModal').classList.add('hidden'), 300); }
+        function openDeleteModal(url) { document.getElementById('confirmDeleteBtn').href = url; const modal = document.getElementById('deleteModal'); modal.classList.remove('hidden'); setTimeout(() => document.getElementById('deleteModalContent').classList.replace('scale-95', 'scale-100'), 10); }
+        function closeDeleteModal() { document.getElementById('deleteModalContent').classList.replace('scale-100', 'scale-95'); setTimeout(() => document.getElementById('deleteModal').classList.add('hidden'), 300); }
+    </script>
+</body>
+</html>

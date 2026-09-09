@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edición Técnica - Almendral TC</title>
+    <link href="/vendor/fonts/montserrat.css"
+        rel="stylesheet" />
+    <script src="/vendor/tailwind.js"></script>
+    <style>
+        /* --- CONFIGURACIÓN DE TEMAS DINÁMICOS --- */
+
+        /* Tema Jugador (Verde Platinum) */
+        .theme-player {
+            --bg-page: linear-gradient(180deg, #0c2b1d 0%, #1a4731 100%);
+            --accent: #10b981;
+            /* Esmeralda */
+            --pill-border: #10b981;
+        }
+
+        /* Tema Admin (Gris Steel) */
+        .theme-admin {
+            --bg-page: radial-gradient(circle at center, #2d3748 0%, #0f172a 100%);
+            --accent: #94a3b8;
+            /* Plata */
+            --pill-border: #94a3b8;
+        }
+
+        :root {
+            --atc-carbono: #1a1a1a;
+            --atc-negro-puro: #000000;
+            --atc-gris-borde: #475569;
+            --atc-acero-luz: #e2e8f0;
+            --atc-pizarra: #334155;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--bg-page);
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            transition: background 0.5s ease;
+        }
+
+        /* --- HEADER --- */
+        .header-section {
+            padding: 50px 20px 40px 20px;
+            text-align: center;
+        }
+
+        .main-pill-title {
+            background: #000000;
+            color: white;
+            padding: 15px 70px;
+            border-radius: 100px;
+            font-weight: 900;
+            font-size: 2.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            display: inline-block;
+            border: 4px solid var(--pill-border);
+        }
+
+        /* --- CONTENEDOR FORMULARIO STEEL --- */
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto 80px auto;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 40px;
+            padding: 60px;
+            border: 6px solid var(--atc-gris-borde);
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- BLOQUE ALERTA ERROR --- */
+        .error-alert-box {
+            background: #450a0a;
+            /* Rojo Carbón */
+            border-left: 6px solid #ef4444;
+            color: #fee2e2;
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- ESTILOS DE INPUT TÉCNICO --- */
+        .label-tech {
+            display: block;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--atc-gris-borde);
+            margin-bottom: 8px;
+            padding-left: 5px;
+        }
+
+        .input-tech {
+            width: 100%;
+            padding: 12px 20px;
+            background: #f8fafc;
+            border: 2px solid var(--atc-acero-luz);
+            border-radius: 12px;
+            font-weight: 700;
+            color: var(--atc-carbono);
+            transition: all 0.3s;
+        }
+
+        .input-tech:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.1);
+        }
+
+        /* --- BOTONES --- */
+        .btn-submit-tech {
+            width: 100%;
+            background: #000000;
+            color: white;
+            padding: 20px;
+            border-radius: 20px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 3px solid var(--accent);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-submit-tech:hover {
+            background: var(--atc-pizarra);
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-link-tech {
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 3px;
+            color: var(--accent);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+            margin-bottom: 30px;
+        }
+
+        .section-tag {
+            font-size: 9px;
+            font-weight: 900;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            border-bottom: 2px solid var(--atc-acero-luz);
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            grid-column: span 2;
+        }
+
+        .checkbox-tech {
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 0.5rem;
+            border: 2px solid var(--atc-acero-luz);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checkbox-tech:checked {
+            background-color: var(--accent);
+            border-color: var(--accent);
+        }
+    </style>
+</head>
+
+<body th:class="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')} ? 'theme-admin' : 'theme-player'">
+
+    <header class="header-section">
+        <h1 class="main-pill-title">Ficha Técnica</h1>
+    </header>
+
+    <main class="form-container">
+        <h1 class="text-3xl font-black uppercase tracking-tighter text-black mb-10 text-center">Editar Perfil Jugador
+        </h1>
+
+        <form th:action="@{'/usuarios/actualizar/' + ${usuario.id}}" th:object="${usuario}" method="post">
+            <input type="hidden" th:field="*{id}" />
+            <input type="hidden" name="rolId" value="2" />
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="section-tag">Credenciales</div>
+                <div>
+                    <label class="label-tech">Username</label>
+                    <input type="text" th:field="*{nombreUsuario}" class="input-tech" required>
+                </div>
+                <div>
+                    <label class="label-tech">Nueva Clave</label>
+                    <input type="password" th:field="*{password}" class="input-tech" placeholder="••••••••">
+                </div>
+
+                <div class="section-tag">Identidad</div>
+                <div>
+                    <label class="label-tech">Nombre</label>
+                    <input type="text" th:field="*{nombre}" class="input-tech" required>
+                </div>
+
+                <div>
+                    <label class="label-tech">Primer Apellido</label>
+                    <input type="text" th:field="*{primerApellido}" class="input-tech" required>
+                </div>
+                <div>
+                    <label class="label-tech">Segundo Apellido</label>
+                    <input type="text" th:field="*{segundoApellido}" class="input-tech">
+                </div>
+
+                <div>
+                    <label class="label-tech">DNI</label>
+                    <input type="text" th:field="*{dni}" class="input-tech" required>
+                </div>
+                <div>
+                    <label class="label-tech">Email</label>
+                    <input type="email" th:field="*{email}" class="input-tech" required>
+                </div>
+                <div>
+                    <label class="label-tech">Teléfono</label>
+                    <input type="text" th:field="*{telefono}" class="input-tech">
+                </div>
+            </div>
+
+            <div class="mt-12 flex justify-between">
+                <a href="/jugadores" class="py-3 px-8 font-900 uppercase text-xs text-slate-400">Cancelar</a>
+                <button type="submit"
+                    class="py-4 px-10 bg-black text-white rounded-2xl font-900 uppercase border-2 border-slate-400 hover:bg-slate-800 transition-all">
+                    Sincronizar Jugador
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <footer class="text-center opacity-30 mt-10">
+        <p class="text-[9px] text-white font-black uppercase tracking-[10px]">Almendral TC 2026</p>
+    </footer>
+
+</body>
+
+</html>

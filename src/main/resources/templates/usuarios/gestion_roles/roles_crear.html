@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo Rol - Almendral TC</title>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <script src="/vendor/tailwind.js"></script>
+    <style>
+        .theme-admin { --bg-page: radial-gradient(circle at center, #2d3748 0%, #0f172a 100%); --accent: #94a3b8; }
+        :root { --atc-carbono: #1a1a1a; --atc-gris-borde: #475569; --atc-acero-luz: #e2e8f0; }
+
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg-page); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .form-container { width: 100%; max-width: 500px; background: white; border-radius: 40px; padding: 50px; border: 6px solid var(--atc-gris-borde); box-shadow: 0 50px 100px rgba(0,0,0,0.5); }
+        
+        .label-tech { display: block; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--atc-gris-borde); margin-bottom: 12px; }
+        .input-tech { width: 100%; padding: 18px 25px; background: #f8fafc; border: 2px solid var(--atc-acero-luz); border-radius: 15px; font-weight: 900; text-transform: uppercase; transition: 0.3s; }
+        .input-tech:focus { outline: none; border-color: var(--accent); background: white; box-shadow: 0 0 0 5px rgba(148, 163, 184, 0.1); }
+        
+        .btn-submit-tech { width: 100%; background: #000; color: white; padding: 20px; border-radius: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; border: 3px solid var(--accent); transition: 0.3s; cursor: pointer; }
+        .btn-submit-tech:hover { background: var(--accent); transform: translateY(-3px); }
+        .nav-link-tech { font-weight: 900; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 2px; color: var(--atc-gris-borde); display: inline-block; margin-bottom: 30px; }
+    </style>
+</head>
+<body class="theme-admin">
+
+    <main class="form-container">
+        <a href="/roles" class="nav-link-tech">← Volver al listado</a>
+        
+        <h1 class="text-2xl font-black uppercase tracking-tighter text-black mb-8">Definir Nuevo<br>Nivel de Acceso</h1>
+
+        <form th:action="@{/roles/guardar}" th:object="${rol}" method="post">
+            <div class="mb-8">
+                <label class="label-tech">Identificador (Prefijo ROLE_ sugerido)</label>
+                <input type="text" th:field="*{nombreRol}" class="input-tech" placeholder="Ej: ROLE_COACH" required>
+                <p th:if="${#fields.hasErrors('nombreRol')}" th:errors="*{nombreRol}" class="text-red-500 text-[10px] font-bold mt-2 uppercase"></p>
+            </div>
+
+            <button type="submit" class="btn-submit-tech">Registrar Rol</button>
+        </form>
+    </main>
+
+</body>
+</html>

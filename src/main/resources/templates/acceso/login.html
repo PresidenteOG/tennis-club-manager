@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Club de Tenis Almendral</title>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <style>
+        :root {
+            --atc-verde: #1a4731;   
+            --atc-verde-claro: #2d5a27;
+            --atc-arcilla: #cc5233; 
+            --atc-blanco: #ffffff;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--atc-verde);
+            background-image: radial-gradient(var(--atc-verde-claro) 1px, transparent 1px);
+            background-size: 30px 30px;
+            margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh;
+        }
+
+        .main-wrapper {
+            display: flex; background-color: var(--atc-blanco); border-radius: 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5); overflow: hidden;
+            max-width: 1050px; width: 95%; height: 650px;
+            animation: fadeInScale 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .image-side {
+            display: none; position: relative; flex: 1.3;
+            background-image: linear-gradient(160deg, #0c2b1d 0%, #1a4731 55%, #2d5a27 100%);
+            background-size: cover; background-position: center;
+        }
+
+        @media (min-width: 768px) {
+            .image-side { display: block; }
+            .image-overlay {
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                background: linear-gradient(to bottom, rgba(26, 71, 49, 0.2), rgba(204, 82, 51, 0.6));
+                display: flex; flex-direction: column; justify-content: flex-end;
+                padding: 40px; color: white; box-sizing: border-box;
+            }
+            .image-overlay h3 { font-size: 32px; font-weight: 800; text-transform: uppercase; margin: 0; }
+        }
+
+        .login-container {
+            padding: 50px; flex: 1; display: flex; flex-direction: column; justify-content: center;
+        }
+
+        .logo { width: 90px; margin-bottom: 20px; }
+        h2 { font-size: 36px; font-weight: 800; color: var(--atc-verde); margin: 0; }
+        .tagline { font-size: 12px; font-weight: 700; color: var(--atc-arcilla); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 30px; }
+
+        .notification {
+            padding: 12px; border-radius: 15px; font-size: 13px; font-weight: 600;
+            margin-bottom: 15px; text-align: center;
+        }
+
+        .error-box {
+            background-color: #fff1f0; color: #cf1322; border: 1px solid #ffa39e;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        .success-box {
+            background-color: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f;
+        }
+
+        form { display: flex; flex-direction: column; gap: 15px; }
+        
+        .input-group { position: relative; width: 100%; }
+        
+        .input-group input {
+            width: 100%; padding: 18px 50px 18px 20px; border: 2px solid #edf2f0;
+            border-radius: 20px; font-size: 15px; box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none; border-color: var(--atc-verde);
+        }
+
+        /* Estilo del botón del ojo */
+        .toggle-password {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-password svg {
+            width: 22px;
+            height: 22px;
+            fill: #999;
+            transition: fill 0.3s;
+        }
+
+        .toggle-password:hover svg {
+            fill: var(--atc-verde);
+        }
+
+        input[type="submit"] {
+            background-color: var(--atc-arcilla); color: white; border: none;
+            cursor: pointer; font-size: 16px; font-weight: 800; text-transform: uppercase;
+            padding: 20px; border-radius: 20px; box-shadow: 0 8px 15px rgba(204, 82, 51, 0.3);
+            transition: all 0.3s; margin-top: 5px;
+        }
+
+        input[type="submit"]:hover { transform: translateY(-3px); background-color: #a33f27; }
+
+        .signup-link { font-size: 13px; margin-top: 30px; text-align: center; color: #888; }
+        .signup-link a { color: var(--atc-verde); font-weight: 700; text-decoration: none; }
+
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper">
+        <div class="image-side">
+            <div class="image-overlay">
+                <h3>Pasión por el Tenis.</h3>
+                <p>Bienvenido a la gestión oficial del Club de Tenis Almendral.</p>
+            </div>
+        </div>
+        
+        <div class="login-container">
+            <img th:src="@{/layout/logo.svg}" alt="Logo del club" class="logo" />
+            <h2>BIENVENIDO</h2>
+            <p class="tagline">Gestión del club</p>
+
+            <div th:if="${param.error}" class="notification error-box">
+                Nombre o contraseña incorrecta.
+            </div>
+
+            <div th:if="${param.logout}" class="notification success-box">
+                Has salido de la pista correctamente.
+            </div>
+
+            <form th:action="@{/login}" method="post">
+                <div class="input-group">
+                    <input type="text" name="username" placeholder="Usuario o Email" required />
+                </div>
+                
+                <div class="input-group">
+                    <input type="password" name="password" placeholder="Contraseña" required id="passwordField" />
+                    <button type="button" class="toggle-password" onclick="togglePassword()">
+                        <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                        </svg>
+                        <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display: none;">
+                            <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.82l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.74-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <input type="submit" value="Entrar a la Pista" />
+            </form>
+
+            <div class="signup-link">
+                ¿No eres socio todavía? <a href="/signup">Solicitar acceso</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById("passwordField");
+            const eyeOpen = document.getElementById("eyeOpen");
+            const eyeClosed = document.getElementById("eyeClosed");
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                eyeOpen.style.display = "none";
+                eyeClosed.style.display = "block";
+            } else {
+                passwordInput.type = "password";
+                eyeOpen.style.display = "block";
+                eyeClosed.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

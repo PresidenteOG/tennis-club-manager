@@ -1,0 +1,231 @@
+<div th:fragment="sidebar">
+    <style>
+        /* 1. ANTI-SALTO (EVITA LA MOVIDA AL CAMBIAR DE PÁGINA) */
+        body { overflow-y: scroll; } 
+
+        /* 2. VARIABLES GLOBALES SIDEBAR */
+        :root {
+            --atc-carbono: #1a1a1a;
+            --atc-pizarra: #334155;
+            --atc-plata: #94a3b8;
+            --atc-acero-luz: #e2e8f0;
+            --atc-negro-puro: #000000;
+            --atc-gris-borde: #475569;
+            --color-perfil: #8b5cf6;
+            --color-jugadores: #3b82f6;
+            --color-usuarios: #8b5cf6;
+            --color-roles: #f59e0b;
+            --color-ligas: #06b6d4;
+            --color-equipos: #f43f5e;
+            --color-calendario: #10b981;
+            --color-partidos: #ec4899; /* Nuevo color para partidos */
+        }
+
+        /* 3. ESTRUCTURA BARRA LATERAL */
+        .sidebar { width: 280px; background: rgba(0, 0, 0, 0.85); border-right: 3px solid var(--atc-gris-borde); padding: 30px 0; position: fixed; top: 0; left: 0; height: 100vh; overflow: hidden; z-index: 100; backdrop-filter: blur(10px); box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column; }
+        .sidebar-content { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+        
+        /* 4. PERFIL E IMAGEN PERFECTA (NO SE DEFORMA) */
+        .user-profile-section { padding: 0 25px 25px 25px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px; flex-shrink: 0; }
+        .user-profile-link { display: flex; align-items: center; gap: 15px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 15px; text-decoration: none; transition: all 0.3s ease; border: 1px solid transparent; position: relative; overflow: hidden; }
+        .user-profile-link:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--color-perfil); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2); }
+        .user-profile-link:hover::after { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--color-perfil); }
+        
+        .user-avatar { width: 50px; height: 50px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255, 255, 255, 0.2); flex-shrink: 0; position: relative; }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; } 
+        
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { color: white; font-weight: 700; font-size: 1rem; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-role { color: var(--atc-plata); font-size: 0.8rem; font-weight: 500; display: flex; align-items: center; gap: 5px; }
+        .user-role-badge { background: rgba(139, 92, 246, 0.2); color: var(--color-perfil); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+        .profile-arrow { color: var(--atc-plata); transition: transform 0.3s ease; }
+        .user-profile-link:hover .profile-arrow { color: var(--color-perfil); transform: translateX(3px); }
+        
+        /* 5. MENÚS Y HOVERS */
+        .sidebar-menu { display: flex; flex-direction: column; gap: 8px; padding: 0 20px; flex: 1; overflow-y: auto; }
+        .sidebar-menu::-webkit-scrollbar { display: none; }
+        .sidebar-link { display: flex; align-items: center; gap: 15px; padding: 16px 20px; color: var(--atc-plata); text-decoration: none; border-radius: 12px; transition: all 0.3s ease; font-weight: 600; font-size: 0.95rem; position: relative; overflow: hidden; flex-shrink: 0; }
+        .sidebar-link::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 0; background: rgba(255, 255, 255, 0.05); transition: width 0.3s ease; }
+        .sidebar-link:hover::before { width: 100%; }
+        .sidebar-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; z-index: 1; transition: transform 0.3s ease; }
+        .sidebar-link:hover .sidebar-icon { transform: scale(1.1); }
+        .sidebar-link:hover { color: white; transform: translateX(5px); }
+        
+        .sidebar-jugadores:hover { color: var(--color-jugadores); }
+        .sidebar-usuarios:hover { color: var(--color-usuarios); }
+        .sidebar-roles:hover { color: var(--color-roles); }
+        .sidebar-ligas:hover { color: var(--color-ligas); }
+        .sidebar-equipos:hover { color: var(--color-equipos); }
+        .sidebar-calendario:hover { color: var(--color-calendario); }
+        .sidebar-partidos:hover { color: var(--color-partidos); } /* Nuevo hover para partidos */
+        
+        .sidebar-divider { height: 1px; background: rgba(255, 255, 255, 0.1); margin: 15px 20px; flex-shrink: 0; }
+        
+        /* 6. LAYOUT INTELIGENTE */
+        body.admin-layout .main-content { margin-left: 280px; width: calc(100% - 280px); }
+        body.player-layout .main-content { margin-left: 0; width: 100%; }
+
+        @media (max-width: 1200px) {
+            .sidebar { width: 240px; }
+            .user-name { font-size: 0.9rem; }
+            body.admin-layout .main-content { margin-left: 240px; width: calc(100% - 240px); }
+        }
+        @media (max-width: 768px) {
+            .sidebar { width: 70px; padding: 20px 0; }
+            .user-profile-section, .sidebar-link span, .sidebar-divider { display: none; }
+            .user-profile-link { justify-content: center; padding: 15px 10px; margin: 0 10px 15px 10px; }
+            .user-avatar { width: 40px; height: 40px; }
+            .sidebar-menu { padding: 0 15px; align-items: center; }
+            .sidebar-link { padding: 15px; justify-content: center; }
+            body.admin-layout .main-content { margin-left: 70px; width: calc(100% - 70px); }
+        }
+    </style>
+
+    <aside class="sidebar">
+        <div class="sidebar-content">
+            <div class="user-profile-section">
+                <a href="/perfil" class="user-profile-link">
+                    <div class="user-avatar">
+                        <img th:src="${usuarioActual != null && usuarioActual.avatar != null && !usuarioActual.avatar.isEmpty()} 
+                            ? @{/images/{path}(path=${usuarioActual.avatar})} 
+                            : @{/vendor/default-avatar.svg}"
+                            alt="Avatar">
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name"><span th:text="${usuarioActual != null ? usuarioActual.nombre : 'Admin'}"></span></div>
+                        <div class="user-role">
+                            <span class="user-role-badge">Full Access</span>
+                        </div>
+                    </div>
+                    <svg class="profile-arrow w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+            </div>
+
+            <div class="sidebar-menu">
+                
+                <a href="/usuarios" class="sidebar-link sidebar-usuarios">
+                    <div class="sidebar-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </div>
+                    <span>Usuarios</span>
+                </a>
+                
+                <a href="/convocatorias" class="sidebar-link text-purple-400 hover:text-purple-300">
+                    <div class="sidebar-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                    </div>
+                    <span>Convocatorias</span>
+                </a>
+
+                <a href="/mail" class="sidebar-link sidebar-roles">
+                    <div class="sidebar-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <span>Notificar</span>
+                </a>
+                <a href="/ligas" class="sidebar-link sidebar-ligas">
+                    <div class="sidebar-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                    </div>
+                    <span>Ligas</span>
+                </a>
+                <a href="/equipos" class="sidebar-link sidebar-equipos">
+                    <div class="sidebar-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <span>Equipos</span>
+                </a>
+                <a href="/menu_admin/calendario" class="sidebar-link sidebar-calendario">
+                    <div class="sidebar-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <span>Calendario</span>
+                </a>
+                <!-- NUEVO BOTÓN PARTIDOS -->
+                <a href="/partidos" class="sidebar-link sidebar-partidos">
+                    <div class="sidebar-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <span>Partidos</span>
+                </a>
+            </div>
+
+            <div class="sidebar-divider"></div>
+
+            <div class="sidebar-menu">
+                <a href="/menu_admin" class="sidebar-link">
+                    <div class="sidebar-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                    </div>
+                    <span>Panel Admin</span>
+                </a>
+                <a href="/menu_principal" class="sidebar-link">
+                    <div class="sidebar-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                    </div>
+                    <span>Modo Jugador</span>
+                </a>
+                <a href="/logout" class="sidebar-link" style="color: #f87171;">
+                    <div class="sidebar-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </div>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <script>
+        const globalThemes = {
+            slate: { name: 'Gris Moderno', colors: { bg1:'#1f2937', bg2:'#0f172a', card:'#1e293b', cardHover:'#0f172a', border:'#334155', highlight:'#475569', textMain:'#f1f5f9', textMuted:'#94a3b8' } },
+            coffee: { name: 'Café Tierra', colors: { bg1:'#2d241e', bg2:'#17110e', card:'#241a15', cardHover:'#332620', border:'#3e2723', highlight:'#5d4037', textMain:'#f5f5f4', textMuted:'#a8a29e' } },
+            ocean: { name: 'Azul Océano', colors: { bg1:'#0c4a6e', bg2:'#082f49', card:'#075985', cardHover:'#0369a1', border:'#0284c7', highlight:'#38bdf8', textMain:'#f0f9ff', textMuted:'#bae6fd' } },
+            forest: { name: 'Bosque Oscuro', colors: { bg1:'#14532d', bg2:'#064e3b', card:'#166534', cardHover:'#15803d', border:'#22c55e', highlight:'#4ade80', textMain:'#f0fdf4', textMuted:'#bbf7d0' } },
+            midnight: { name: 'Medianoche', colors: { bg1:'#2e1065', bg2:'#1e1b4b', card:'#312e81', cardHover:'#3730a3', border:'#4338ca', highlight:'#6366f1', textMain:'#eef2ff', textMuted:'#c7d2fe' } },
+            crimson: { name: 'Rojo Carmesí', colors: { bg1:'#7f1d1d', bg2:'#450a0a', card:'#991b1b', cardHover:'#b91c1c', border:'#dc2626', highlight:'#ef4444', textMain:'#fef2f2', textMuted:'#fecaca' } },
+            obsidian: { name: 'Obsidiana', colors: { bg1:'#171717', bg2:'#0a0a0a', card:'#262626', cardHover:'#404040', border:'#525252', highlight:'#737373', textMain:'#fafafa', textMuted:'#d4d4d4' } }
+        };
+
+        function applyThemeGlobal(themeKey) {
+            const t = globalThemes[themeKey]?.colors;
+            if(!t) return;
+            const root = document.documentElement;
+            root.style.setProperty('--bg-grad-1', t.bg1);
+            root.style.setProperty('--bg-grad-2', t.bg2);
+            root.style.setProperty('--card-bg', t.card);
+            root.style.setProperty('--card-bg-hover', t.cardHover);
+            root.style.setProperty('--border-color', t.border);
+            root.style.setProperty('--border-highlight', t.highlight);
+            root.style.setProperty('--btn-bg', t.border);
+            root.style.setProperty('--btn-hover', t.highlight);
+            root.style.setProperty('--text-main', t.textMain);
+            root.style.setProperty('--text-muted', t.textMuted);
+        }
+        
+        const currentTheme = localStorage.getItem('ctt_admin_theme') || 'slate';
+        applyThemeGlobal(currentTheme);
+    </script>
+</div>

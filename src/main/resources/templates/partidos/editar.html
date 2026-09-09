@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Partido - Almendral TC</title>
+    <script src="/vendor/tailwind.js"></script>
+    <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
+    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root { --bg-grad-1: #1f2937; --bg-grad-2: #0f172a; --card-bg: #1e293b; --card-bg-hover: #0f172a; --border-color: #334155; --border-highlight: #475569; --text-main: #f1f5f9; --text-muted: #94a3b8; --btn-bg: #334155; --btn-hover: #475569; }
+        body { font-family: 'Montserrat', sans-serif; margin: 0; display: flex; background: radial-gradient(circle at center, var(--bg-grad-1) 0%, var(--bg-grad-2) 100%); background-attachment: fixed; color: var(--text-main); min-height: 100vh; overflow-y: scroll; transition: background 0.5s ease; }
+
+        .theme-card { background: var(--card-bg); border-color: var(--border-color); transition: all 0.3s ease; }
+        .theme-text { color: var(--text-main); }
+        .theme-muted { color: var(--text-muted); }
+        .theme-border { border-color: var(--border-color); }
+        .theme-input { background: var(--card-bg-hover); border-color: var(--border-color); color: var(--text-main); }
+        .theme-input:focus { border-color: var(--border-highlight); }
+
+        body.admin-layout .main-content { margin-left: 280px; width: calc(100% - 280px); }
+        body.player-layout .main-content { margin-left: 0; width: 100%; }
+        .main-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding-bottom: 60px; }
+
+        .form-container { max-width: 860px; width: 95%; margin: 30px auto; border-radius: 40px; padding: 50px; border: 4px solid var(--border-color); box-shadow: 0 50px 100px rgba(0,0,0,0.6); background: var(--card-bg); }
+        .form-title { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 3px; color: var(--text-muted); margin-bottom: 32px; display: flex; align-items: center; gap: 10px; }
+        .form-title::after { content: ''; flex: 1; height: 2px; background: var(--border-color); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-grid .span-2 { grid-column: span 2; }
+        .form-sep { height: 1px; background: var(--border-color); margin: 8px 0; grid-column: span 2; }
+
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        .field label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); }
+        .field input, .field select { background: var(--card-bg-hover); border: 2px solid var(--border-color); color: var(--text-main); font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; padding: 10px 14px; border-radius: 14px; outline: none; transition: border-color .2s; }
+        .field input:focus, .field select:focus { border-color: var(--border-highlight); }
+        .field input::placeholder { color: rgba(255,255,255,0.2); }
+        .field-error { font-size: 10px; font-weight: 700; color: #f87171; margin-top: 2px; display: none; }
+        .field.has-error input, .field.has-error select { border-color: #f87171; }
+        .field.has-error .field-error { display: block; }
+
+        /* autocomplete */
+        .autocomplete-wrap { position: relative; }
+        .autocomplete-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50; background: var(--card-bg); border: 2px solid var(--border-highlight); border-radius: 14px; overflow: hidden; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .autocomplete-list.open { display: block; }
+        .autocomplete-item { padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--text-main); cursor: pointer; transition: background .1s; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color);}
+        .autocomplete-item:hover { background: var(--border-highlight); }
+
+        /* toggle */
+        .toggle-group { display: flex; gap: 8px; }
+        .toggle-btn { flex: 1; padding: 10px; border-radius: 14px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; border: 2px solid var(--border-color); background: var(--card-bg-hover); color: var(--text-muted); cursor: pointer; transition: all .2s; text-align: center; }
+        .toggle-btn.active-home { border-color: #10b981; background: rgba(16,185,129,0.1); color: #4ade80; }
+        .toggle-btn.active-away { border-color: #f59e0b; background: rgba(245,158,11,0.1); color: #fbbf24; }
+
+        /* resultado */
+        .result-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .result-opt { padding: 12px 8px; border-radius: 14px; border: 2px solid var(--border-color); cursor: pointer; text-align: center; transition: all .15s; background: var(--card-bg-hover); font-family: 'Montserrat', sans-serif; }
+        .result-opt .opt-icon { font-size: 18px; margin-bottom: 4px; }
+        .result-opt .opt-label { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); }
+        .result-opt.opt-win.chosen  { border-color: #10b981; background: rgba(16,185,129,0.1); } .result-opt.opt-win.chosen  .opt-label { color: #4ade80; }
+        .result-opt.opt-lost.chosen { border-color: #f87171; background: rgba(248,113,113,0.1); } .result-opt.opt-lost.chosen .opt-label { color: #f87171; }
+        .result-opt.opt-post.chosen { border-color: #94a3b8; background: rgba(148,163,184,0.1); } .result-opt.opt-post.chosen .opt-label { color: #94a3b8; }
+        .result-opt.opt-pend.chosen { border-color: #fbbf24; background: rgba(251,191,36,0.1); } .result-opt.opt-pend.chosen .opt-label { color: #fbbf24; }
+        .result-opt.opt-win:hover   { border-color: #10b981; } .result-opt.opt-lost:hover { border-color: #f87171; }
+        .result-opt.opt-post:hover  { border-color: #94a3b8; } .result-opt.opt-pend:hover { border-color: #fbbf24; }
+
+        /* multiselect */
+        .search-players { background: var(--card-bg-hover); border: 2px solid var(--border-color); color: var(--text-main); font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600; padding: 10px 14px; border-radius: 14px; outline: none; width: 100%; transition: border-color .2s; margin-bottom: 10px; }
+        .search-players:focus { border-color: var(--border-highlight); }
+        .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; max-height: 240px; overflow-y: auto; padding: 12px; border: 2px solid var(--border-color); border-radius: 14px; background: var(--card-bg-hover); }
+        .player-chip { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 2px solid var(--border-color); border-radius: 10px; cursor: pointer; transition: all .15s; user-select: none; background: var(--card-bg);}
+        .player-chip:hover { border-color: var(--border-highlight); }
+        .player-chip.selected { border-color: var(--border-highlight); background: var(--border-highlight); }
+        .player-chip .dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border-color); flex-shrink: 0; transition: all .15s; }
+        .player-chip.selected .dot { background: var(--text-main); border-color: var(--text-main); }
+        .player-chip .pname { font-size: 10px; font-weight: 700; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .player-chip.selected .pname { color: white; }
+        .selected-count { font-size: 10px; font-weight: 700; color: var(--text-muted); margin-top: 6px; }
+        .selected-count span { background: var(--border-highlight); color: white; padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
+
+        /* acciones */
+        .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 32px; }
+        .btn-cancel { background: var(--card-bg-hover); border: 2px solid var(--border-color); color: var(--text-muted); font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 900; padding: 12px 24px; border-radius: 14px; cursor: pointer; height: 44px; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .btn-cancel:hover { border-color: var(--border-highlight); color: var(--text-main); }
+        .btn-submit { background: #3b82f6; border: 2px solid #3b82f6; color: white; font-family: 'Montserrat', sans-serif; font-size: 10px; font-weight: 900; padding: 12px 32px; border-radius: 14px; cursor: pointer; height: 44px; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-submit:hover { background: #2563eb; border-color: #2563eb; }
+
+        .alert-error { background: rgba(248,113,113,0.1); border: 2px solid #f87171; color: #fca5a5; border-radius: 14px; padding: 12px 16px; font-size: 11px; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+        .toast { position: fixed; bottom: 30px; right: 30px; z-index: 999; background: var(--card-bg); color: white; font-size: 11px; font-weight: 700; padding: 14px 20px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 10px; transform: translateY(80px); opacity: 0; transition: all .3s; border: 2px solid var(--border-color);}
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        .theme-switcher-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--card-bg); border: 3px solid var(--border-highlight); color: var(--text-main); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 999; transition: 0.3s; }
+        .theme-switcher-btn:hover { transform: rotate(45deg) scale(1.1); }
+        .theme-panel { position: fixed; bottom: 100px; right: 30px; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 20px; padding: 20px; width: 250px; box-shadow: 0 15px 40px rgba(0,0,0,0.8); z-index: 998; display: none; opacity: 0; transition: 0.3s; }
+        .theme-panel.active { display: block; opacity: 1; }
+        .theme-option { width: 100%; padding: 10px; margin-bottom: 8px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; font-weight: bold; text-align: left; display: flex; align-items: center; gap: 10px; transition: 0.2s; color: white; }
+
+        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } .form-grid .span-2 { grid-column: span 1; } .form-container { padding: 24px; border-radius: 24px; } body.admin-layout .main-content { margin-left: 70px; width: calc(100% - 70px); } }
+    </style>
+</head>
+<body th:classappend="${#authorization.expression('hasAuthority(''ROLE_ADMIN'')')} ? 'admin-layout' : 'player-layout'">
+
+    <div sec:authorize="hasAuthority('ROLE_ADMIN')" th:replace="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <header class="py-10 text-center w-full relative">
+            <a href="/partidos" class="absolute left-10 top-14 text-white font-black uppercase text-xs hover:text-slate-400 transition">
+                <i class="fas fa-arrow-left"></i> Historial
+            </a>
+            <h1 class="theme-card inline-block px-12 py-4 rounded-full border-4 text-3xl font-black uppercase tracking-widest shadow-2xl theme-text">
+                Editar Partido
+            </h1>
+        </header>
+
+        <main class="form-container">
+
+            <div class="alert-error" th:if="${errorMsg}">
+                <i class="fas fa-exclamation-circle"></i>
+                <span th:text="${errorMsg}"></span>
+            </div>
+
+            <form id="form-partido" th:action="@{/partidos/{id}/editar(id=${partido.id})}" method="post">
+
+                <div class="form-title"><i class="fas fa-futbol" style="color:var(--border-highlight);"></i> Información del partido</div>
+                
+                <div class="form-grid">
+                    <div class="field span-2" id="field-rival">
+                        <label><i class="fas fa-shield-alt mr-1"></i> Rival *</label>
+                        <input type="text" name="rival" id="rival" th:value="${partido.rival}" placeholder="Nombre del rival" maxlength="120" autocomplete="off">
+                        <div class="field-error">El nombre del rival es obligatorio.</div>
+                    </div>
+
+                    <div class="field" id="field-categoria">
+                        <label><i class="fas fa-layer-group mr-1"></i> Categoría *</label>
+                        <select name="categoria" id="categoria">
+                            <option value="">Selecciona…</option>
+                            <option th:each="cat : ${categorias}" th:value="${cat}" th:text="${cat}" th:selected="${partido.categoria == cat}"></option>
+                        </select>
+                        <div class="field-error">Selecciona una categoría.</div>
+                    </div>
+
+                    <div class="field" id="field-competicion">
+                        <label><i class="fas fa-trophy mr-1"></i> Competición *</label>
+                        <div class="autocomplete-wrap">
+                            <input type="text" id="competicion-input" placeholder="Escribe o elige…" autocomplete="off" th:value="${partido.competicion}">
+                            <input type="hidden" id="competicion" name="competicion" th:value="${partido.competicion}">
+                            <div class="autocomplete-list" id="comp-list">
+                                <div class="autocomplete-item" data-value="CATALANA">CATALANA</div>
+                                <div class="autocomplete-item" data-value="CDT">CDT</div>
+                                <div class="autocomplete-item" data-value="CEV">CEV</div>
+                            </div>
+                        </div>
+                        <div class="field-error">La competición es obligatoria.</div>
+                    </div>
+
+                    <div class="field">
+                        <label><i class="fas fa-calendar mr-1"></i> Fecha</label>
+                        <input type="date" name="fecha" th:value="${partido.fecha}">
+                    </div>
+
+                    <div class="field">
+                        <label><i class="fas fa-clock mr-1"></i> Hora</label>
+                        <input type="time" name="hora" th:value="${partido.hora}">
+                    </div>
+
+                    <div class="field span-2">
+                        <label><i class="fas fa-map-marker-alt mr-1"></i> Localización</label>
+                        <div class="toggle-group">
+                            <button type="button" class="toggle-btn" id="btn-home" onclick="setLocal(true)"><i class="fas fa-home mr-1"></i> Casa</button>
+                            <button type="button" class="toggle-btn" id="btn-away" onclick="setLocal(false)"><i class="fas fa-plane mr-1"></i> Fuera</button>
+                        </div>
+                        <input type="hidden" id="local" name="local" th:value="${partido.local}">
+                    </div>
+
+                    <div class="form-sep"></div>
+
+                    <div class="field span-2">
+                        <label><i class="fas fa-flag-checkered mr-1"></i> Resultado</label>
+                        <div class="result-options">
+                            <div class="result-opt opt-win"  onclick="chooseResult('win',this)"><div class="opt-icon">🏆</div><div class="opt-label">Victoria</div></div>
+                            <div class="result-opt opt-lost" onclick="chooseResult('lost',this)"><div class="opt-icon">😞</div><div class="opt-label">Derrota</div></div>
+                            <div class="result-opt opt-post" onclick="chooseResult('postponed',this)"><div class="opt-icon">⏸️</div><div class="opt-label">Aplazado</div></div>
+                            <div class="result-opt opt-pend" onclick="chooseResult('pending',this)"><div class="opt-icon">⏳</div><div class="opt-label">Pendiente</div></div>
+                        </div>
+                        <input type="hidden" id="resultado" name="resultado" th:value="${partido.resultado?.name()}">
+                    </div>
+
+                    <div class="field span-2" id="marcador-field">
+                        <label><i class="fas fa-table-tennis mr-1"></i> Marcador</label>
+                        <input type="text" name="marcador" id="marcador" th:value="${partido.marcador}" placeholder="p.e. 3-1, 6-4 6-2…" maxlength="40">
+                    </div>
+
+                    <div class="form-sep"></div>
+
+                    <div class="field">
+                        <label><i class="fas fa-star mr-1"></i> Capitán</label>
+                        <select name="capitaId">
+                            <option value="">Sin capitán</option>
+                            <option th:each="u : ${usuarios}" th:value="${u.id}" th:text="${(u.nombre != null and !#strings.isEmpty(u.nombre)) ? u.nombre + ' ' + (u.primerApellido ?: '') : u.nombreUsuario}" th:selected="${partido.capita?.id == u.id}"></option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label><i class="fas fa-euro-sign mr-1"></i> Coste</label>
+                        <input type="text" name="coste" th:value="${partido.coste}" placeholder="p.e. 45,00 €" maxlength="30">
+                    </div>
+
+                    <div class="field span-2">
+                        <label><i class="fas fa-users mr-1"></i> Jugadores convocados</label>
+                        <input type="text" class="search-players" id="search-players" placeholder="Buscar jugador…" autocomplete="off">
+                        <div class="players-grid" id="players-grid"></div>
+                        <div class="selected-count">Seleccionados: <span id="count-badge">0</span></div>
+                        <div id="players-hidden"></div>
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <a href="/partidos" class="btn-cancel"><i class="fas fa-times"></i> Cancelar</a>
+                    <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Guardar cambios</button>
+                </div>
+
+            </form>
+        </main>
+    </div>
+
+    <div sec:authorize="hasAuthority('ROLE_ADMIN')">
+        <button class="theme-switcher-btn" onclick="toggleThemePanel()"><i class="fas fa-palette"></i></button>
+        <div class="theme-panel" id="themePanel">
+            <h4 class="text-sm font-black uppercase text-center mb-4 theme-text border-b pb-2 theme-border">Elige tu estilo</h4>
+            <div id="themeOptions"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script th:inline="javascript">
+        const ALL_PLAYERS  = /*[(${usuariosJson})]*/ [];
+        const PRE_SELECTED = /*[(${jugadoresSeleccionados})]*/ [];
+        const CURRENT_LOCAL    = /*[[${partido.local}]]*/ true;
+        const CURRENT_RESULTADO = /*[[${partido.resultado?.name()}]]*/ 'pending';
+    </script>
+
+    <script>
+    // ── LOCAL toggle
+    function setLocal(isHome) {
+        document.getElementById('local').value = isHome;
+        document.getElementById('btn-home').className = 'toggle-btn' + (isHome ? ' active-home' : '');
+        document.getElementById('btn-away').className = 'toggle-btn' + (!isHome ? ' active-away' : '');
+    }
+    setLocal(CURRENT_LOCAL === true || CURRENT_LOCAL === 'true');
+
+    // ── RESULTADO
+    function chooseResult(val, el) {
+        document.querySelectorAll('.result-opt').forEach(e => e.classList.remove('chosen'));
+        el.classList.add('chosen');
+        document.getElementById('resultado').value = val;
+        document.getElementById('marcador-field').style.display = (val === 'win' || val === 'lost') ? '' : 'none';
+    }
+    (function() {
+        const map = { win: 'opt-win', lost: 'opt-lost', postponed: 'opt-post', pending: 'opt-pend' };
+        if (CURRENT_RESULTADO && map[CURRENT_RESULTADO]) {
+            document.querySelector('.' + map[CURRENT_RESULTADO]).classList.add('chosen');
+        }
+        document.getElementById('marcador-field').style.display = (CURRENT_RESULTADO === 'win' || CURRENT_RESULTADO === 'lost') ? '' : 'none';
+    })();
+
+    // ── AUTOCOMPLETE COMPETICIÓN
+    const compInput  = document.getElementById('competicion-input');
+    const compHidden = document.getElementById('competicion');
+    const compList   = document.getElementById('comp-list');
+    const compItems  = compList.querySelectorAll('.autocomplete-item');
+
+    compInput.addEventListener('input', () => {
+        const q = compInput.value.trim();
+        compHidden.value = q;
+        const qUp = q.toUpperCase();
+        let anyVisible = false;
+        compItems.forEach(item => {
+            const match = q === '' || item.dataset.value.includes(qUp);
+            item.style.display = match ? '' : 'none';
+            if (match) anyVisible = true;
+        });
+        compList.classList.toggle('open', anyVisible && q.length > 0);
+    });
+    compInput.addEventListener('focus', () => {
+        compHidden.value = compInput.value.trim();
+        if (!compInput.value) compList.classList.add('open');
+    });
+    compItems.forEach(item => {
+        item.addEventListener('mousedown', e => {
+            e.preventDefault();
+            compInput.value = compHidden.value = item.dataset.value;
+            compList.classList.remove('open');
+        });
+    });
+    document.addEventListener('click', e => {
+        if (!compInput.contains(e.target) && !compList.contains(e.target)) compList.classList.remove('open');
+    });
+
+    // ── MULTISELECT JUGADORS
+    let selectedPlayers = new Set(PRE_SELECTED.map(String));
+
+    function buildDisplay(p) { return p.nombreCompleto && p.nombreCompleto.trim() ? p.nombreCompleto : p.nombreUsuario || '—'; }
+
+    function renderPlayers(filter = '') {
+        const grid = document.getElementById('players-grid');
+        const q = filter.toLowerCase().trim();
+        const visible = ALL_PLAYERS.filter(p => q === '' || buildDisplay(p).toLowerCase().includes(q));
+        
+        if (!ALL_PLAYERS.length) { grid.innerHTML = `<span class="players-empty">Sin jugadores.</span>`; return; }
+        if (!visible.length)     { grid.innerHTML = `<span class="players-empty">Sin resultados.</span>`; return; }
+        
+        grid.innerHTML = visible.map(p => {
+            const sel = selectedPlayers.has(String(p.id));
+            const name = buildDisplay(p);
+            return `<div class="player-chip ${sel ? 'selected' : ''}" onclick="togglePlayer('${p.id}',this)">
+                <div class="dot"></div><span class="pname" title="${name}">${name}</span>
+            </div>`;
+        }).join('');
+        updateHiddens();
+    }
+
+    function togglePlayer(id, el) {
+        id = String(id);
+        if (selectedPlayers.has(id)) { selectedPlayers.delete(id); el.classList.remove('selected'); }
+        else { selectedPlayers.add(id); el.classList.add('selected'); }
+        updateHiddens();
+    }
+
+    function updateHiddens() {
+        document.getElementById('players-hidden').innerHTML = [...selectedPlayers].map(id => `<input type="hidden" name="jugadoresIds" value="${id}">`).join('');
+        document.getElementById('count-badge').textContent = selectedPlayers.size;
+    }
+
+    document.getElementById('search-players').addEventListener('input', function() { renderPlayers(this.value); });
+
+    // ── VALIDACIÓN
+    document.getElementById('form-partido').addEventListener('submit', function(e) {
+        let ok = true;
+        const rival = document.getElementById('rival').value.trim();
+        setErr('field-rival', !rival); if (!rival) ok = false;
+        const cat   = document.getElementById('categoria').value;
+        setErr('field-categoria', !cat); if (!cat) ok = false;
+        compHidden.value = compInput.value.trim();
+        const comp = compHidden.value;
+        setErr('field-competicion', !comp); if (!comp) ok = false;
+        if (!ok) { e.preventDefault(); showToast('Revisa los campos obligatorios.', 'err'); }
+    });
+
+    function setErr(id, show) { document.getElementById(id).classList.toggle('has-error', show); }
+
+    window.addEventListener('DOMContentLoaded', () => { 
+        renderPlayers(); 
+        if(typeof globalThemes !== 'undefined'){
+            const themePanelOptions = document.getElementById('themeOptions');
+            for (const [key, data] of Object.entries(globalThemes)) {
+                const btn = document.createElement('div');
+                btn.className = 'theme-option';
+                btn.style.backgroundColor = data.colors.border || data.colors.highlight;
+                btn.innerHTML = `<span class="w-4 h-4 rounded-full bg-white opacity-50"></span> ${data.name}`;
+                btn.onclick = () => { applyThemeGlobal(key); localStorage.setItem('ctt_admin_theme', key); toggleThemePanel(); };
+                themePanelOptions.appendChild(btn);
+            }
+        }
+    });
+    function toggleThemePanel() { document.getElementById('themePanel').classList.toggle('active'); }
+    </script>
+</body>
+</html>
