@@ -77,10 +77,21 @@ springsecurity/  the filter chain, the UserDetailsService, the resource handler 
 
 More detail, and how a request actually crosses those layers, is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
-<!-- ## Screenshots
-     Back office (member list, competition tree, match history), the booking calendar and
-     the player view — captured from a local run with the seeded club. Added in the
-     screenshot pass. -->
+## Screenshots
+
+From a local run on the seeded club.
+
+![Login](docs/screenshots/login.png) | ![Admin home — member count and live court status](docs/screenshots/menu-admin.png)
+:---:|:---:
+Login | Admin home
+
+![Member list, 22 seeded members across three pages](docs/screenshots/usuarios.png) | ![Match history, 14 fixtures with results and cost](docs/screenshots/partidos.png)
+:---:|:---:
+Members | Match history
+
+![Booking calendar with club activities](docs/screenshots/calendario.png) | ![The smaller player view](docs/screenshots/player-menu.png)
+:---:|:---:
+Calendar | Player view (`jugador` / `jugador`)
 
 ## License
 
