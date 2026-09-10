@@ -102,9 +102,9 @@ learning project, not something to run a real club on.
 
 Built by three students on the DAM course:
 
-- **Daniel Adanegbe** — REST endpoints, UI design, domain logic, the Docker setup
-- **Baye** — bug fixing, seed data, SQL
-- **Andrés** — API work, error handling, content
+- **Daniel Adanegbe** ([@PresidenteOG](https://github.com/PresidenteOG)) — REST endpoints, UI design, domain logic, the Docker setup
+- **Baye** ([@ass241](https://github.com/ass241)) — bug fixing, seed data, SQL
+- **Andrés** ([@Andre03uwu](https://github.com/Andre03uwu)) — API work, error handling, content
 
 The `jfern264/GestionCTT` repository it came from was the course tutor's; this is a clean
 single-commit copy under Daniel's account with the real club's data removed.
