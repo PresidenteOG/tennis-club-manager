@@ -18,6 +18,20 @@ It is a team project from the second year of the DAM programme. The stack is Spr
 with server-rendered Thymeleaf views, Spring Security for the login and the role split, and
 JPA over an H2 database that lives in memory. Contributors are listed at the bottom.
 
+## Start here
+
+The clearest single file is
+[`PartidoService`](src/main/java/Tennis_ERP/TennisErp/service/PartidoService.java) — the
+fixture lifecycle. A match is created as `pending` with a squad and an optional captain;
+`registrarResultado` is the quick action that sets `win` / `lost` / `postponed` and a score,
+while `actualizar` is the full edit and applies each field only if the form actually sent it.
+The "played" count on the admin home is deliberately `win + lost`, so postponed and pending
+fixtures do not inflate it. The other thing worth a look is the role split: everything under
+[`springsecurity/`](src/main/java/Tennis_ERP/TennisErp/springsecurity/), plus
+`PistaOcupacionDTO` and `MailRestController` — the only JSON the app serves, behind the
+court-occupancy widget and the announcement recipient preview. Every other screen is
+full-page Thymeleaf.
+
 ## Running it
 
 You need a JDK 21. Nothing else — no database to install, no configuration file to fill in.
