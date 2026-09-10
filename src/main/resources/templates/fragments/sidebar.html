@@ -23,7 +23,8 @@
 
         /* 3. ESTRUCTURA BARRA LATERAL */
         .sidebar { width: 280px; background: rgba(0, 0, 0, 0.85); border-right: 3px solid var(--atc-gris-borde); padding: 30px 0; position: fixed; top: 0; left: 0; height: 100vh; overflow: hidden; z-index: 100; backdrop-filter: blur(10px); box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5); display: flex; flex-direction: column; }
-        .sidebar-content { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+        .sidebar-content { display: flex; flex-direction: column; height: 100%; overflow-y: auto; scrollbar-width: none; }
+        .sidebar-content::-webkit-scrollbar { display: none; }
         
         /* 4. PERFIL E IMAGEN PERFECTA (NO SE DEFORMA) */
         .user-profile-section { padding: 0 25px 25px 25px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 20px; flex-shrink: 0; }
@@ -42,7 +43,14 @@
         .user-profile-link:hover .profile-arrow { color: var(--color-perfil); transform: translateX(3px); }
         
         /* 5. MENÚS Y HOVERS */
-        .sidebar-menu { display: flex; flex-direction: column; gap: 8px; padding: 0 20px; flex: 1; overflow-y: auto; }
+        .sidebar-menu { display: flex; flex-direction: column; gap: 8px; padding: 0 20px; }
+        /* El bloque de navegación principal ocupa el espacio libre; el bloque
+           inferior (Panel Admin / Modo Jugador / Cerrar Sesión) se queda con su
+           altura natural pegado debajo del separador. En pantallas bajas hace
+           scroll .sidebar-content entero. Antes ambos bloques tenían flex:1 y el
+           separador acababa cortando "Calendario" a media lista. */
+        .sidebar-content > .sidebar-menu:first-of-type { flex: 1 0 auto; }
+        .sidebar-content > .sidebar-menu:last-of-type { flex: 0 0 auto; }
         .sidebar-menu::-webkit-scrollbar { display: none; }
         .sidebar-link { display: flex; align-items: center; gap: 15px; padding: 16px 20px; color: var(--atc-plata); text-decoration: none; border-radius: 12px; transition: all 0.3s ease; font-weight: 600; font-size: 0.95rem; position: relative; overflow: hidden; flex-shrink: 0; }
         .sidebar-link::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 0; background: rgba(255, 255, 255, 0.05); transition: width 0.3s ease; }
