@@ -5,7 +5,7 @@
     <title>Usuarios - Almendral TC</title>
     <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
     <script src="/vendor/tailwind.js"></script>
-    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -155,7 +155,7 @@
                      th:data-roles="${#strings.listJoin(u.roles.![nombreRol.replace('ROLE_', '')], ',')}">
                      
                     <div class="relative w-16 h-16 cursor-pointer group" onclick="openImagePreview(this.querySelector('img').src)">
-                        <img th:src="${u.avatar != null && !u.avatar.isEmpty()} ? @{/images/{path}(path=${u.avatar})} : @{/vendor/default-avatar.svg} + ${u.nombre} + '&background=random&color=fff'"
+                        <img th:src="${u.avatar != null && !u.avatar.isEmpty()} ? @{/images/{path}(path=${u.avatar})} : @{/vendor/default-avatar.svg}"
                              class="w-full h-full object-cover rounded-2xl shadow-sm border-2 theme-border">
                     </div>
 

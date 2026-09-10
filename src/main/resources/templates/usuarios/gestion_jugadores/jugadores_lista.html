@@ -5,7 +5,7 @@
     <title>Jugadores - Almendral TC</title>
     <link href="/vendor/fonts/montserrat.css" rel="stylesheet">
     <script src="/vendor/tailwind.js"></script>
-    <link rel="stylesheet" href="/vendor/fontawesome/all.min.css">
+    <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -150,7 +150,7 @@
                      th:style="${stat.index >= 6 ? 'display: none;' : ''}">
                      
                     <div class="relative w-16 h-16 cursor-pointer group" onclick="openImagePreview(this.querySelector('img').src)">
-                        <img th:src="${jugador.avatar != null && !jugador.avatar.isEmpty()} ? @{/images/{path}(path=${jugador.avatar})} : @{/vendor/default-avatar.svg} + ${jugador.nombre} + '&background=random&color=fff'"
+                        <img th:src="${jugador.avatar != null && !jugador.avatar.isEmpty()} ? @{/images/{path}(path=${jugador.avatar})} : @{/vendor/default-avatar.svg}"
                              class="w-full h-full object-cover rounded-2xl shadow-sm group-hover:scale-105 transition-transform theme-border border-2">
                     </div>
 
