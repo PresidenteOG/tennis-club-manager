@@ -1,3 +1,5 @@
+![Tennis Club Manager](docs/banner.png)
+
 # tennis-club-manager
 
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat&logo=openjdk&logoColor=white)
