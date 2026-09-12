@@ -1,4 +1,4 @@
-![Tennis Club Manager](docs/banner.png)
+![Tennis Club Manager](./docs/banner.png)
 
 # tennis-club-manager
 
@@ -91,7 +91,7 @@ dto/             one projection used by the court-occupancy endpoint
 springsecurity/  the filter chain, the UserDetailsService, the resource handler for uploads
 ```
 
-![tennis-club-manager architecture: Thymeleaf browser through controller, service, DAO/repository layers down to the JPA domain, Spring Security filter chain and DataInitializer seeding cross-cutting the request path](docs/architecture.png)
+![tennis-club-manager architecture: Thymeleaf browser through controller, service, DAO/repository layers down to the JPA domain, Spring Security filter chain and DataInitializer seeding cross-cutting the request path](./docs/architecture.png)
 
 More detail, and how a request actually crosses those layers, is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -99,15 +99,15 @@ More detail, and how a request actually crosses those layers, is in [ARCHITECTUR
 
 From a local run on the seeded club.
 
-![Login](docs/screenshots/login.png) | ![Admin home — member count and live court status](docs/screenshots/menu-admin.png)
+![Login](./docs/screenshots/login.png) | ![Admin home — member count and live court status](./docs/screenshots/menu-admin.png)
 :---:|:---:
 Login | Admin home
 
-![Member list, 22 seeded members across three pages](docs/screenshots/usuarios.png) | ![Match history, 14 fixtures with results and cost](docs/screenshots/partidos.png)
+![Member list, 22 seeded members across three pages](./docs/screenshots/usuarios.png) | ![Match history, 14 fixtures with results and cost](./docs/screenshots/partidos.png)
 :---:|:---:
 Members | Match history
 
-![Booking calendar with club activities](docs/screenshots/calendario.png) | ![The smaller player view](docs/screenshots/player-menu.png)
+![Booking calendar with club activities](./docs/screenshots/calendario.png) | ![The smaller player view](./docs/screenshots/player-menu.png)
 :---:|:---:
 Calendar | Player view (`jugador` / `jugador`)
 
