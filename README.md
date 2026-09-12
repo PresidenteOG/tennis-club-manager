@@ -91,6 +91,8 @@ dto/             one projection used by the court-occupancy endpoint
 springsecurity/  the filter chain, the UserDetailsService, the resource handler for uploads
 ```
 
+![tennis-club-manager architecture: Thymeleaf browser through controller, service, DAO/repository layers down to the JPA domain, Spring Security filter chain and DataInitializer seeding cross-cutting the request path](docs/architecture.png)
+
 More detail, and how a request actually crosses those layers, is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Screenshots
