@@ -1,0 +1,11 @@
+# Render blueprint — https://render.com/docs/blueprint-spec
+# One free web service built from the Dockerfile. In-memory H2, reseeded on
+# every start — no external database or mail server needed. See docs/DEPLOY.md.
+services:
+  - type: web
+    name: tennis-club-manager
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /login
+    autoDeploy: true
